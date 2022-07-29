@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/encoding"
@@ -31,12 +32,13 @@ var (
 	tools []string = []string{
 		"Pencil",
 		"Square",
+		"Border",
 	}
 	selectedColor string = "white"
 	selectedTool  string = "Pencil"
 )
 
-func drawRegion(screen tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, letter rune, drawBorders bool) {
+func drawRegion(screen tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, borderStyle tcell.Style, letter rune, drawBorders bool) {
 	if y2 < y1 {
 		y1, y2 = y2, y1
 	}
@@ -44,7 +46,6 @@ func drawRegion(screen tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, lett
 		x1, x2 = x2, x1
 	}
 
-	borderStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite)
 	if drawBorders {
 		for col := x1; col <= x2; col++ {
 			screen.SetContent(col, y1, tcell.RuneHLine, nil, borderStyle)
@@ -98,12 +99,12 @@ func main() {
 		event := screen.PollEvent()
 		width, height := screen.Size()
 
-		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), block, true)
-		drawRegion(screen, colorsOffset-1, 0, len(colors)+colorsOffset, 3, defaultStyle, ' ', true)
+		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, true)
+		drawRegion(screen, colorsOffset-1, 0, len(colors)+colorsOffset, 3, defaultStyle, defaultStyle, ' ', true)
 		for index, color := range colors {
-			drawRegion(screen, index+(colorsOffset-1), 0, index+(colorsOffset+1), 3, tcell.StyleDefault.Foreground(tcell.GetColor(color)), block, false)
+			drawRegion(screen, index+(colorsOffset-1), 0, index+(colorsOffset+1), 3, tcell.StyleDefault.Foreground(tcell.GetColor(color)), defaultStyle, block, false)
 		}
-		drawRegion(screen, toolsOffset-1, 0, (len(tools)*8)+toolsOffset-2, 3, defaultStyle, ' ', true)
+		drawRegion(screen, toolsOffset-1, 0, (len(tools)*8)+toolsOffset-2, 3, defaultStyle, defaultStyle, ' ', true)
 		for index, tool := range tools {
 			for letterIndex, letter := range tool {
 				drawRegion(
@@ -113,6 +114,7 @@ func main() {
 					(index*8)+(toolsOffset+1)+letterIndex,
 					2,
 					tcell.StyleDefault.Foreground(tcell.ColorWhite),
+					defaultStyle,
 					letter,
 					false,
 				)
@@ -125,7 +127,7 @@ func main() {
 				break
 			}
 		}
-		for i := 0; i < 6; i++ {
+		for i := 0; i < len(strings.TrimSpace(selectedTool)); i++ {
 			drawRegion(
 				screen,
 				(selectedToolIndex*8)+(toolsOffset-1)+i,
@@ -133,6 +135,7 @@ func main() {
 				(selectedToolIndex*8)+(toolsOffset+1)+i,
 				3,
 				tcell.StyleDefault.Foreground(tcell.ColorWhite),
+				defaultStyle,
 				'^',
 				false,
 			)
@@ -166,11 +169,24 @@ func main() {
 						startX = x
 						startY = y
 					}
+				} else if selectedTool == "Border" {
+					if !pressed {
+						pressed = true
+						startX = x
+						startY = y
+					}
 				}
 			} else if button == 2 {
 				if selectedTool == "Pencil" {
 					screen.SetContent(x, y, ' ', nil, defaultStyle)
 				} else if selectedTool == "Square" {
+					if !pressed {
+						pressed = true
+						erase = true
+						startX = x
+						startY = y
+					}
+				} else if selectedTool == "Border" {
 					if !pressed {
 						pressed = true
 						erase = true
@@ -183,9 +199,13 @@ func main() {
 					pressed = false
 					if erase {
 						erase = false
-						drawRegion(screen, startX, startY, x, y, defaultStyle, ' ', false)
+						drawRegion(screen, startX, startY, x, y, defaultStyle, defaultStyle, ' ', false)
 					} else {
-						drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), block, false)
+						if selectedTool == "Square" {
+							drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, false)
+						} else if selectedTool == "Border" {
+							drawRegion(screen, startX, startY, x, y, defaultStyle, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), ' ', true)
+						}
 					}
 				}
 			}
