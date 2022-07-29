@@ -39,8 +39,8 @@ func drawRegion(screen tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, lett
 	if x2 < x1 {
 		x1, x2 = x2, x1
 	}
-	borderStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite)
 
+	borderStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite)
 	if drawBorders {
 		for col := x1; col <= x2; col++ {
 			screen.SetContent(col, y1, tcell.RuneHLine, nil, borderStyle)
