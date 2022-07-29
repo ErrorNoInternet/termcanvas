@@ -92,7 +92,7 @@ func main() {
 	erase := false
 	startX, startY := 0, 0
 	colorsOffset := 7
-	toolsOffset := colorsOffset + len(colors) + 3
+	toolsOffset := colorsOffset + len(colors) + 2
 
 	for {
 		screen.Show()
