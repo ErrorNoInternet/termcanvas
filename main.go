@@ -229,12 +229,14 @@ func main() {
 									data, err := ioutil.ReadFile(filePath)
 									if err != nil {
 										fmt.Printf("Unable to open %v: %v\n", filePath, err.Error())
-										return
+										fmt.Print("Press Enter to continue...")
+										reader.Scan()
+										screen.Resume()
+									} else {
+										screen.Resume()
+										readData(string(data), screen)
+										selectedTool = "Pencil"
 									}
-
-									screen.Resume()
-									readData(string(data), screen)
-									selectedTool = "Pencil"
 								}
 							}
 						}
