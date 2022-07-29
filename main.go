@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/encoding"
@@ -29,10 +28,15 @@ var (
 		"aqua",
 		"white",
 	}
-	tools []string = []string{
-		"Pencil",
-		"Square",
-		"Border",
+	tools = map[string]int{
+		"Pencil": 0,
+		"Square": 8,
+		"Border": 16,
+	}
+	actions = map[string]int{
+		"Save":  0,
+		"Load":  6,
+		"Clear": 12,
 	}
 	selectedColor string = "white"
 	selectedTool  string = "Pencil"
@@ -91,8 +95,19 @@ func main() {
 	pressed := false
 	erase := false
 	startX, startY := 0, 0
+
+	colorsLength := len(colors)
+	toolsLength := 0
+	for tool, _ := range tools {
+		toolsLength += len(tool) + 2
+	}
+	actionsLength := 0
+	for action, _ := range actions {
+		actionsLength += len(action) + 2
+	}
 	colorsOffset := 7
-	toolsOffset := colorsOffset + len(colors) + 2
+	toolsOffset := colorsOffset + colorsLength + 2
+	actionsOffset := toolsOffset + toolsLength + 2
 
 	for {
 		screen.Show()
@@ -100,18 +115,18 @@ func main() {
 		width, height := screen.Size()
 
 		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, true)
-		drawRegion(screen, colorsOffset-1, 0, len(colors)+colorsOffset, 3, defaultStyle, defaultStyle, ' ', true)
+		drawRegion(screen, colorsOffset-1, 0, colorsLength+colorsOffset, 3, defaultStyle, defaultStyle, ' ', true)
 		for index, color := range colors {
 			drawRegion(screen, index+(colorsOffset-1), 0, index+(colorsOffset+1), 3, tcell.StyleDefault.Foreground(tcell.GetColor(color)), defaultStyle, block, false)
 		}
-		drawRegion(screen, toolsOffset-1, 0, (len(tools)*8)+toolsOffset-2, 3, defaultStyle, defaultStyle, ' ', true)
-		for index, tool := range tools {
-			for letterIndex, letter := range tool {
+		drawRegion(screen, toolsOffset-1, 0, toolsLength+toolsOffset-2, 3, defaultStyle, defaultStyle, ' ', true)
+		for tool, offset := range tools {
+			for letterOffset, letter := range tool {
 				drawRegion(
 					screen,
-					(index*8)+(toolsOffset-1)+letterIndex,
+					toolsOffset+letterOffset+offset-1,
 					0,
-					(index*8)+(toolsOffset+1)+letterIndex,
+					toolsOffset+letterOffset+offset+1,
 					2,
 					tcell.StyleDefault.Foreground(tcell.ColorWhite),
 					defaultStyle,
@@ -120,25 +135,41 @@ func main() {
 				)
 			}
 		}
-		selectedToolIndex := 0
-		for index, tool := range tools {
+		selectedToolOffset := 0
+		for tool, offset := range tools {
 			if selectedTool == tool {
-				selectedToolIndex = index
+				selectedToolOffset = offset
 				break
 			}
 		}
-		for i := 0; i < len(strings.TrimSpace(selectedTool)); i++ {
+		for i := 0; i < len(selectedTool); i++ {
 			drawRegion(
 				screen,
-				(selectedToolIndex*8)+(toolsOffset-1)+i,
+				(selectedToolOffset)+(toolsOffset-1)+i,
 				1,
-				(selectedToolIndex*8)+(toolsOffset+1)+i,
+				(selectedToolOffset)+(toolsOffset+1)+i,
 				3,
 				tcell.StyleDefault.Foreground(tcell.ColorWhite),
 				defaultStyle,
 				'^',
 				false,
 			)
+		}
+		drawRegion(screen, actionsOffset-3, 0, actionsLength+actionsOffset-4, 3, defaultStyle, defaultStyle, ' ', true)
+		for action, offset := range actions {
+			for letterOffset, letter := range action {
+				drawRegion(
+					screen,
+					actionsOffset-2+letterOffset+offset-1,
+					0,
+					actionsOffset-2+letterOffset+offset+1,
+					2,
+					tcell.StyleDefault.Foreground(tcell.ColorWhite),
+					defaultStyle,
+					letter,
+					false,
+				)
+			}
 		}
 
 		switch event := event.(type) {
@@ -154,11 +185,27 @@ func main() {
 			button := event.Buttons()
 			if button == 1 {
 				if y == 1 || y == 2 {
-					if x-colorsOffset < len(colors) && x-colorsOffset >= 0 {
+					if x < colorsLength+colorsOffset && x-colorsOffset >= 0 {
 						selectedColor = colors[x-colorsOffset]
-					}
-					if x-toolsOffset < (len(tools)*8)-2 && x-toolsOffset >= 0 {
-						selectedTool = tools[(x-toolsOffset)/8]
+					} else if x-toolsOffset < toolsLength && x >= colorsLength {
+						selectedTool = ""
+						for tool, offset := range tools {
+							if x-toolsOffset >= offset && x-toolsOffset <= (offset+len(tool)+1) {
+								selectedTool = tool
+							}
+						}
+					} else if x-actionsOffset < actionsLength-4 && x >= toolsLength {
+						for action, offset := range actions {
+							if x-actionsOffset+2 >= offset && x-actionsOffset+2 <= (offset+len(action)+1) {
+								if action == "Clear" {
+									screen.Clear()
+								} else if action == "Save" {
+									fmt.Println("SAVING")
+								} else if action == "Load" {
+									fmt.Println("LOADING")
+								}
+							}
+						}
 					}
 				}
 				if selectedTool == "Pencil" {
