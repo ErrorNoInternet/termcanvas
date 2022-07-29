@@ -12,7 +12,7 @@ go build
 ## Usage
 `esc`: exit termcanvas\
 `left click`: place a pixel\
-`right click`: remove a pixel\
+`right click`: remove a pixel
 
 <sub>If you would like to modify or use this repository (including its code) in your own project, please be sure to credit!</sub>
 
