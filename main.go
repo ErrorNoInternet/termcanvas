@@ -189,7 +189,7 @@ func main() {
 				if y == 1 || y == 2 {
 					if x < colorsLength+colorsOffset && x-colorsOffset >= 0 {
 						selectedColor = colors[x-colorsOffset]
-					} else if x-toolsOffset < toolsLength && x >= colorsLength {
+					} else if x-toolsOffset < toolsLength && x >= colorsLength+colorsOffset+2 {
 						selectedTool = ""
 						for tool, offset := range tools {
 							if x-toolsOffset >= offset && x-toolsOffset <= (offset+len(tool)+1) {
@@ -203,17 +203,38 @@ func main() {
 									screen.Clear()
 								} else if action == "Save" {
 									data := []byte(dumpData(screen))
-									screen.Fini()
+									screen.Suspend()
+
 									reader := bufio.NewScanner(os.Stdin)
 									fmt.Print("(Save) File Path: ")
 									reader.Scan()
 									filePath := reader.Text()
 									err := ioutil.WriteFile(filePath, data, 0644)
 									if err != nil {
-										fmt.Printf("Unable to write file: %v\n", err.Error())
+										fmt.Printf("Unable to write to file: %v\n", err.Error())
+									} else {
+										fmt.Printf("Successfully saved to %v!\n", filePath)
 									}
-									return
+
+									fmt.Print("Press Enter to continue...")
+									reader.Scan()
+									screen.Resume()
 								} else if action == "Load" {
+									screen.Suspend()
+
+									reader := bufio.NewScanner(os.Stdin)
+									fmt.Print("(Load) File Path: ")
+									reader.Scan()
+									filePath := reader.Text()
+									data, err := ioutil.ReadFile(filePath)
+									if err != nil {
+										fmt.Printf("Unable to open %v: %v\n", filePath, err.Error())
+										return
+									}
+
+									screen.Resume()
+									readData(string(data), screen)
+									selectedTool = "Pencil"
 								}
 							}
 						}
