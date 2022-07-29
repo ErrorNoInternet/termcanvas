@@ -28,8 +28,12 @@ var (
 		"aqua",
 		"white",
 	}
-	selectedTool  string
-	selectedColor string
+	tools []string = []string{
+		"Pencil",
+		"Square",
+	}
+	selectedColor string = "white"
+	selectedTool  string = "Pencil"
 )
 
 func drawRegion(screen tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, letter rune, drawBorders bool) {
@@ -84,18 +88,56 @@ func main() {
 	screen.EnablePaste()
 	screen.Clear()
 	width, height := screen.Size()
+	pressed := false
+	erase := false
+	startX, startY := 0, 0
 	colorsOffset := 7
+	toolsOffset := colorsOffset + len(colors) + 3
 
 	for {
 		screen.Show()
 		event := screen.PollEvent()
 		width, height = screen.Size()
 
+		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), block, true)
 		drawRegion(screen, colorsOffset-1, 0, len(colors)+colorsOffset, 3, defaultStyle, ' ', true)
 		for index, color := range colors {
 			drawRegion(screen, index+(colorsOffset-1), 0, index+(colorsOffset+1), 3, tcell.StyleDefault.Foreground(tcell.GetColor(color)), block, false)
 		}
-		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), block, true)
+		drawRegion(screen, toolsOffset-1, 0, (len(tools)*8)+toolsOffset-2, 3, defaultStyle, ' ', true)
+		for index, tool := range tools {
+			for letterIndex, letter := range tool {
+				drawRegion(
+					screen,
+					(index*8)+(toolsOffset-1)+letterIndex,
+					0,
+					(index*8)+(toolsOffset+1)+letterIndex,
+					2,
+					tcell.StyleDefault.Foreground(tcell.ColorWhite),
+					letter,
+					false,
+				)
+			}
+		}
+		selectedToolIndex := 0
+		for index, tool := range tools {
+			if selectedTool == tool {
+				selectedToolIndex = index
+				break
+			}
+		}
+		for i := 0; i < 6; i++ {
+			drawRegion(
+				screen,
+				(selectedToolIndex*8)+(toolsOffset-1)+i,
+				1,
+				(selectedToolIndex*8)+(toolsOffset+1)+i,
+				3,
+				tcell.StyleDefault.Foreground(tcell.ColorWhite),
+				'^',
+				false,
+			)
+		}
 
 		switch event := event.(type) {
 		case *tcell.EventKey:
@@ -113,10 +155,40 @@ func main() {
 					if x-colorsOffset < len(colors) && x-colorsOffset >= 0 {
 						selectedColor = colors[x-colorsOffset]
 					}
+					if x-toolsOffset < (len(tools)*8)-2 && x-toolsOffset >= 0 {
+						selectedTool = tools[(x-toolsOffset)/8]
+					}
 				}
-				screen.SetContent(x, y, block, nil, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)))
+				if selectedTool == "Pencil" {
+					screen.SetContent(x, y, block, nil, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)))
+				} else if selectedTool == "Square" {
+					if !pressed {
+						pressed = true
+						startX = x
+						startY = y
+					}
+				}
 			} else if button == 2 {
-				screen.SetContent(x, y, ' ', nil, defaultStyle)
+				if selectedTool == "Pencil" {
+					screen.SetContent(x, y, ' ', nil, defaultStyle)
+				} else if selectedTool == "Square" {
+					if !pressed {
+						pressed = true
+						erase = true
+						startX = x
+						startY = y
+					}
+				}
+			} else if button == 0 {
+				if pressed {
+					pressed = false
+					if erase {
+						erase = false
+						drawRegion(screen, startX, startY, x, y, defaultStyle, ' ', false)
+					} else {
+						drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), block, false)
+					}
+				}
 			}
 		default:
 			screen.SetContent(width-1, height-1, 'X', nil, background)
