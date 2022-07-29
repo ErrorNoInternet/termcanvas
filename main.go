@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/gdamore/tcell/v2"
@@ -200,9 +202,18 @@ func main() {
 								if action == "Clear" {
 									screen.Clear()
 								} else if action == "Save" {
-									fmt.Println("SAVING")
+									data := []byte(dumpData(screen))
+									screen.Fini()
+									reader := bufio.NewScanner(os.Stdin)
+									fmt.Print("(Save) File Path: ")
+									reader.Scan()
+									filePath := reader.Text()
+									err := ioutil.WriteFile(filePath, data, 0644)
+									if err != nil {
+										fmt.Printf("Unable to write file: %v\n", err.Error())
+									}
+									return
 								} else if action == "Load" {
-									fmt.Println("LOADING")
 								}
 							}
 						}
