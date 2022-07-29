@@ -2,6 +2,13 @@
 Draw stuff in your terminal!
 ![Screenshot](https://raw.githubusercontent.com/ErrorNoInternet/termcanvas/main/screenshots/0.png)
 
+## Compiling
+```
+git clone https://github.com/ErrorNoInternet/termcanvas
+cd termcanvas
+go build
+```
+
 ## Usage
 `esc`: exit termcanvas\
 `left click`: place a pixel\
