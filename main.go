@@ -87,7 +87,6 @@ func main() {
 	screen.EnableMouse()
 	screen.EnablePaste()
 	screen.Clear()
-	width, height := screen.Size()
 	pressed := false
 	erase := false
 	startX, startY := 0, 0
@@ -97,7 +96,7 @@ func main() {
 	for {
 		screen.Show()
 		event := screen.PollEvent()
-		width, height = screen.Size()
+		width, height := screen.Size()
 
 		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), block, true)
 		drawRegion(screen, colorsOffset-1, 0, len(colors)+colorsOffset, 3, defaultStyle, ' ', true)
