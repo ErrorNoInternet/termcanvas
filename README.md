@@ -9,7 +9,7 @@ cd termcanvas
 go build
 ```
 
-## Usage
+## Keybindings
 `esc`: exit termcanvas\
 `left click`: place a pixel\
 `right click`: remove a pixel
