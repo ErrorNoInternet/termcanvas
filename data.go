@@ -8,12 +8,16 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-func dumpData(screen tcell.Screen) string {
+func dumpData(screen tcell.Screen) (string, bool) {
 	data := ""
+	empty := true
 	width, height := screen.Size()
 	for x := 0; x <= width; x++ {
 		for y := 4; y <= height; y++ {
 			character, _, style, _ := screen.GetContent(x, y)
+			if character != ' ' && character != 0 {
+				empty = false
+			}
 			foregroundColor, backgroundColor, _ := style.Decompose()
 			var foregroundColorName, backgroundColorName string
 			for _, existingColor := range colors {
@@ -35,7 +39,7 @@ func dumpData(screen tcell.Screen) string {
 			data += fmt.Sprintf("%v,%v|%v|%v|%v\n", x, y, foregroundColorName, backgroundColorName, string(character))
 		}
 	}
-	return data
+	return data, empty
 }
 
 func readData(data string, screen tcell.Screen) {

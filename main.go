@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/encoding"
@@ -179,8 +180,7 @@ func main() {
 		switch event := event.(type) {
 		case *tcell.EventKey:
 			if event.Key() == tcell.KeyEscape {
-				screen.Fini()
-				os.Exit(0)
+				exit(screen)
 			}
 			if selectedTool == "Text" {
 				if textX >= width || textX <= 0 {
@@ -237,19 +237,18 @@ func main() {
 						for action, offset := range actions {
 							if x-actionsOffset+2 >= offset && x-actionsOffset+2 <= (offset+len(action)+1) {
 								if action == "Exit" {
-									screen.Fini()
-									os.Exit(0)
+									exit(screen)
 								} else if action == "Clear" {
 									screen.Clear()
 								} else if action == "Save" {
-									data := []byte(dumpData(screen))
+									data, _ := dumpData(screen)
 									screen.Suspend()
 
 									reader := bufio.NewScanner(os.Stdin)
 									fmt.Print("(Save) File Path: ")
 									reader.Scan()
 									filePath := reader.Text()
-									err := ioutil.WriteFile(filePath, data, 0644)
+									err := ioutil.WriteFile(filePath, []byte(data), 0644)
 									if err != nil {
 										fmt.Printf("Unable to write to file: %v\n", err.Error())
 									} else {
@@ -365,4 +364,44 @@ func main() {
 			screen.SetContent(width-1, height-1, 'X', nil, background)
 		}
 	}
+}
+
+func exit(screen tcell.Screen) {
+	data, empty := dumpData(screen)
+	screen.Fini()
+	if empty {
+		os.Exit(0)
+	}
+
+	reader := bufio.NewScanner(os.Stdin)
+	save := ""
+	for {
+		if save == "y" || save == "n" {
+			break
+		}
+		fmt.Print("Would you like to save your drawing? [Y]es/[N]o: ")
+		reader.Scan()
+		save = reader.Text()
+		if len(save) > 0 {
+			save = strings.ToLower(string(save[0]))
+		}
+	}
+
+	if save == "y" {
+		var saved bool
+		for !saved {
+			fmt.Print("(Save) File Path: ")
+			reader.Scan()
+			filePath := reader.Text()
+			err := ioutil.WriteFile(filePath, []byte(data), 0644)
+			if err != nil {
+				fmt.Printf("Unable to write to file: %v\n", err.Error())
+			} else {
+				fmt.Printf("Successfully saved to %v!\n", filePath)
+				saved = true
+			}
+		}
+	}
+
+	os.Exit(0)
 }
