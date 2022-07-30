@@ -14,8 +14,8 @@ func dumpData(screen tcell.Screen) string {
 	for x := 0; x <= width; x++ {
 		for y := 4; y <= height; y++ {
 			character, _, style, _ := screen.GetContent(x, y)
-			color, _, _ := style.Decompose()
-			data += fmt.Sprintf("%v,%v|%v|%v\n", x, y, color.Hex(), string(character))
+			foregroundColor, backgroundColor, _ := style.Decompose()
+			data += fmt.Sprintf("%v,%v|%v|%v|%v\n", x, y, foregroundColor.Hex(), backgroundColor.Hex(), string(character))
 		}
 	}
 	return data
@@ -35,11 +35,18 @@ func readData(data string, screen tcell.Screen) {
 		if err != nil {
 			panic("invalid y coordinate")
 		}
-		color, err := strconv.Atoi(segments[1])
+		foregroundColor, err := strconv.Atoi(segments[1])
 		if err != nil {
 			panic("invalid color")
 		}
-		character := []rune(segments[2])[0]
-		screen.SetContent(x, y, character, nil, tcell.StyleDefault.Foreground(tcell.NewHexColor(int32(color))))
+		backgroundColor, err := strconv.Atoi(segments[2])
+		if err != nil {
+			panic("invalid color")
+		}
+		character := []rune(segments[3])[0]
+		textColor := tcell.StyleDefault.
+			Foreground(tcell.NewHexColor(int32(foregroundColor))).
+			Background(tcell.NewHexColor(int32(backgroundColor)))
+		screen.SetContent(x, y, character, nil, textColor)
 	}
 }

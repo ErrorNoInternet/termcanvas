@@ -195,9 +195,19 @@ func main() {
 					textY++
 				} else if event.Key() == tcell.KeyBackspace || event.Key() == tcell.KeyBackspace2 {
 					textX--
-					screen.SetContent(textX, textY, ' ', nil, defaultStyle)
+					_, _, style, _ := screen.GetContent(textX, textY)
+					_, backgroundColor, _ := style.Decompose()
+					textColor := tcell.StyleDefault.
+						Foreground(backgroundColor).
+						Background(backgroundColor)
+					screen.SetContent(textX, textY, ' ', nil, textColor)
 				} else {
-					screen.SetContent(textX, textY, event.Rune(), nil, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)))
+					_, _, style, _ := screen.GetContent(textX, textY)
+					backgroundColor, _, _ := style.Decompose()
+					textColor := tcell.StyleDefault.
+						Foreground(tcell.GetColor(selectedColor)).
+						Background(backgroundColor)
+					screen.SetContent(textX, textY, event.Rune(), nil, textColor)
 					textX++
 				}
 			}
@@ -243,6 +253,7 @@ func main() {
 									fmt.Print("Press Enter to continue...")
 									reader.Scan()
 									screen.Resume()
+									selectedTool = "Pencil"
 								} else if action == "Load" {
 									screen.Suspend()
 
