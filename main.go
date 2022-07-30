@@ -39,6 +39,7 @@ var (
 		"Save":  0,
 		"Load":  6,
 		"Clear": 12,
+		"Exit":  19,
 	}
 	selectedColor string = "white"
 	selectedTool  string = "Pencil"
@@ -198,7 +199,10 @@ func main() {
 					} else if x-actionsOffset < actionsLength-4 && x >= toolsLength {
 						for action, offset := range actions {
 							if x-actionsOffset+2 >= offset && x-actionsOffset+2 <= (offset+len(action)+1) {
-								if action == "Clear" {
+								if action == "Exit" {
+									screen.Fini()
+									os.Exit(0)
+								} else if action == "Clear" {
 									screen.Clear()
 								} else if action == "Save" {
 									data := []byte(dumpData(screen))
