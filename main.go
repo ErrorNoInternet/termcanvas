@@ -243,11 +243,16 @@ func main() {
 								} else if action == "Save" {
 									data, _ := dumpData(screen)
 									screen.Suspend()
+									selectedTool = "Pencil"
 
 									reader := bufio.NewScanner(os.Stdin)
 									fmt.Print("(Save) File Path: ")
 									reader.Scan()
 									filePath := reader.Text()
+									if strings.TrimSpace(filePath) == "" {
+										screen.Resume()
+										break
+									}
 									err := ioutil.WriteFile(filePath, []byte(data), 0644)
 									if err != nil {
 										fmt.Printf("Unable to write to file: %v\n", err.Error())
@@ -258,14 +263,18 @@ func main() {
 									fmt.Print("Press Enter to continue...")
 									reader.Scan()
 									screen.Resume()
-									selectedTool = "Pencil"
 								} else if action == "Load" {
 									screen.Suspend()
+									selectedTool = "Pencil"
 
 									reader := bufio.NewScanner(os.Stdin)
 									fmt.Print("(Load) File Path: ")
 									reader.Scan()
 									filePath := reader.Text()
+									if strings.TrimSpace(filePath) == "" {
+										screen.Resume()
+										break
+									}
 									data, err := ioutil.ReadFile(filePath)
 									if err != nil {
 										fmt.Printf("Unable to load %v: %v\n", filePath, err.Error())
@@ -275,57 +284,57 @@ func main() {
 									} else {
 										screen.Resume()
 										readData(string(data), screen)
-										selectedTool = "Pencil"
 									}
 								}
 							}
 						}
 					}
-				}
-				if selectedTool == "Pencil" {
-					screen.SetContent(x, y, block, nil, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)))
-				} else if selectedTool == "Region" {
-					if !pressed {
-						pressed = true
-						startX = x
-						startY = y
-					}
-					if lastX+lastY != 0 {
-						drawRegion(screen, startX, startY, lastX, lastY, defaultStyle, defaultStyle, ' ', false)
-					}
-					lastX = x
-					lastY = y
-					drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, false)
-				} else if selectedTool == "Border" {
-					if !pressed {
-						pressed = true
-						startX = x
-						startY = y
-					}
-					if lastX+lastY != 0 {
-						x1, y1, x2, y2 := startX, startY, lastX, lastY
-						if y2 < y1 {
-							y1, y2 = y2, y1
+				} else {
+					if selectedTool == "Pencil" {
+						screen.SetContent(x, y, block, nil, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)))
+					} else if selectedTool == "Region" {
+						if !pressed {
+							pressed = true
+							startX = x
+							startY = y
 						}
-						if x2 < x1 {
-							x1, x2 = x2, x1
+						if lastX+lastY != 0 {
+							drawRegion(screen, startX, startY, lastX, lastY, defaultStyle, defaultStyle, ' ', false)
 						}
-						for row := y1; row <= y2; row++ {
-							for col := x1; col <= x2; col++ {
-								screen.SetContent(col, row, ' ', nil, defaultStyle)
+						lastX = x
+						lastY = y
+						drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, false)
+					} else if selectedTool == "Border" {
+						if !pressed {
+							pressed = true
+							startX = x
+							startY = y
+						}
+						if lastX+lastY != 0 {
+							x1, y1, x2, y2 := startX, startY, lastX, lastY
+							if y2 < y1 {
+								y1, y2 = y2, y1
+							}
+							if x2 < x1 {
+								x1, x2 = x2, x1
+							}
+							for row := y1; row <= y2; row++ {
+								for col := x1; col <= x2; col++ {
+									screen.SetContent(col, row, ' ', nil, defaultStyle)
+								}
+							}
+							for row := y1; row <= y2; row++ {
+								for col := x1; col <= x2; col++ {
+									screen.SetContent(col, row, ' ', nil, defaultStyle)
+								}
 							}
 						}
-						for row := y1; row <= y2; row++ {
-							for col := x1; col <= x2; col++ {
-								screen.SetContent(col, row, ' ', nil, defaultStyle)
-							}
-						}
+						lastX = x
+						lastY = y
+						drawRegion(screen, startX, startY, x, y, defaultStyle, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), ' ', true)
+					} else if selectedTool == "Text" {
+						textX, textY = x, y
 					}
-					lastX = x
-					lastY = y
-					drawRegion(screen, startX, startY, x, y, defaultStyle, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), ' ', true)
-				} else if selectedTool == "Text" {
-					textX, textY = x, y
 				}
 			} else if button == 2 {
 				if selectedTool == "Pencil" {
@@ -393,6 +402,9 @@ func exit(screen tcell.Screen) {
 			fmt.Print("(Save) File Path: ")
 			reader.Scan()
 			filePath := reader.Text()
+			if strings.TrimSpace(filePath) == "" {
+				continue
+			}
 			err := ioutil.WriteFile(filePath, []byte(data), 0644)
 			if err != nil {
 				fmt.Printf("Unable to write to file: %v\n", err.Error())
