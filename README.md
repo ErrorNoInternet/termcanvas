@@ -2,6 +2,14 @@
 Draw stuff in your terminal!
 ![Screenshot](https://raw.githubusercontent.com/ErrorNoInternet/termcanvas/main/screenshots/0.png)
 
+## Features
+ - Placing pixels
+ - 16 different colors
+ - Drawing filled squares
+ - Drawing empty boxes
+ - Displaying custom text
+ - Saving & loading (CSV)
+
 ## Compiling
 ```
 git clone https://github.com/ErrorNoInternet/termcanvas
