@@ -34,6 +34,7 @@ var (
 		"Pencil": 0,
 		"Region": 8,
 		"Border": 16,
+		"Text":   24,
 	}
 	actions = map[string]int{
 		"Save":  0,
@@ -97,6 +98,7 @@ func main() {
 	screen.Clear()
 	var pressed, erase bool
 	var startX, startY, lastX, lastY int
+	var textX, textY int = 0, 4
 
 	colorsLength := len(colors)
 	toolsLength := 0
@@ -180,6 +182,25 @@ func main() {
 				screen.Fini()
 				os.Exit(0)
 			}
+			if selectedTool == "Text" {
+				if textX >= width || textX <= 0 {
+					textX = 0
+				}
+				if textY >= height || textY <= 0 {
+					textY = 4
+				}
+
+				if event.Key() == tcell.KeyEnter {
+					textX = 0
+					textY++
+				} else if event.Key() == tcell.KeyBackspace || event.Key() == tcell.KeyBackspace2 {
+					textX--
+					screen.SetContent(textX, textY, ' ', nil, defaultStyle)
+				} else {
+					screen.SetContent(textX, textY, event.Rune(), nil, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)))
+					textX++
+				}
+			}
 		case *tcell.EventResize:
 			screen.Sync()
 		case *tcell.EventMouse:
@@ -189,7 +210,7 @@ func main() {
 				if y == 1 || y == 2 {
 					if x < colorsLength+colorsOffset && x-colorsOffset >= 0 {
 						selectedColor = colors[x-colorsOffset]
-					} else if x-toolsOffset < toolsLength && x >= colorsLength+colorsOffset+2 {
+					} else if x-toolsOffset < toolsLength-2 && x >= colorsLength+colorsOffset+2 {
 						selectedTool = ""
 						for tool, offset := range tools {
 							if x-toolsOffset >= offset && x-toolsOffset <= (offset+len(tool)+1) {
@@ -287,6 +308,8 @@ func main() {
 					lastX = x
 					lastY = y
 					drawRegion(screen, startX, startY, x, y, defaultStyle, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), ' ', true)
+				} else if selectedTool == "Text" {
+					textX, textY = x, y
 				}
 			} else if button == 2 {
 				if selectedTool == "Pencil" {
