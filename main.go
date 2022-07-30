@@ -102,11 +102,11 @@ func main() {
 
 	colorsLength := len(colors)
 	toolsLength := 0
-	for tool, _ := range tools {
+	for tool := range tools {
 		toolsLength += len(tool) + 2
 	}
 	actionsLength := 0
-	for action, _ := range actions {
+	for action := range actions {
 		actionsLength += len(action) + 2
 	}
 	colorsOffset := 7
