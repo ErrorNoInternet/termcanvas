@@ -94,8 +94,7 @@ func main() {
 	screen.EnableMouse()
 	screen.EnablePaste()
 	screen.Clear()
-	pressed := false
-	erase := false
+	var pressed, erase bool
 	var startX, startY, lastX, lastY int
 
 	colorsLength := len(colors)
@@ -295,6 +294,7 @@ func main() {
 						startX = x
 						startY = y
 					}
+					drawRegion(screen, startX, startY, x, y, defaultStyle, defaultStyle, ' ', false)
 				} else if selectedTool == "Border" {
 					if !pressed {
 						pressed = true
@@ -302,15 +302,13 @@ func main() {
 						startX = x
 						startY = y
 					}
+					drawRegion(screen, startX, startY, x, y, defaultStyle, defaultStyle, ' ', false)
 				}
 			} else if button == 0 {
 				if pressed {
 					pressed = false
 					lastX, lastY = 0, 0
-					if erase {
-						erase = false
-						drawRegion(screen, startX, startY, x, y, defaultStyle, defaultStyle, ' ', false)
-					} else {
+					if !erase {
 						if selectedTool == "Region" {
 							drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, false)
 						} else if selectedTool == "Border" {
