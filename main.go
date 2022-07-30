@@ -32,7 +32,7 @@ var (
 	}
 	tools = map[string]int{
 		"Pencil": 0,
-		"Square": 8,
+		"Region": 8,
 		"Border": 16,
 	}
 	actions = map[string]int{
@@ -96,7 +96,7 @@ func main() {
 	screen.Clear()
 	pressed := false
 	erase := false
-	startX, startY := 0, 0
+	var startX, startY, lastX, lastY int
 
 	colorsLength := len(colors)
 	toolsLength := 0
@@ -244,23 +244,51 @@ func main() {
 				}
 				if selectedTool == "Pencil" {
 					screen.SetContent(x, y, block, nil, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)))
-				} else if selectedTool == "Square" {
+				} else if selectedTool == "Region" {
 					if !pressed {
 						pressed = true
 						startX = x
 						startY = y
 					}
+					if lastX+lastY != 0 {
+						drawRegion(screen, startX, startY, lastX, lastY, defaultStyle, defaultStyle, ' ', false)
+					}
+					lastX = x
+					lastY = y
+					drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, false)
 				} else if selectedTool == "Border" {
 					if !pressed {
 						pressed = true
 						startX = x
 						startY = y
 					}
+					if lastX+lastY != 0 {
+						x1, y1, x2, y2 := startX, startY, lastX, lastY
+						if y2 < y1 {
+							y1, y2 = y2, y1
+						}
+						if x2 < x1 {
+							x1, x2 = x2, x1
+						}
+						for row := y1 - 1; row <= y2+1; row++ {
+							for col := x1 - 1; col <= x2+1; col++ {
+								screen.SetContent(col, row, ' ', nil, defaultStyle)
+							}
+						}
+						for row := y1 + 1; row <= y2-1; row++ {
+							for col := x1 + 1; col <= x2-1; col++ {
+								screen.SetContent(col, row, ' ', nil, defaultStyle)
+							}
+						}
+					}
+					lastX = x
+					lastY = y
+					drawRegion(screen, startX, startY, x, y, defaultStyle, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), ' ', true)
 				}
 			} else if button == 2 {
 				if selectedTool == "Pencil" {
 					screen.SetContent(x, y, ' ', nil, defaultStyle)
-				} else if selectedTool == "Square" {
+				} else if selectedTool == "Region" {
 					if !pressed {
 						pressed = true
 						erase = true
@@ -278,11 +306,12 @@ func main() {
 			} else if button == 0 {
 				if pressed {
 					pressed = false
+					lastX, lastY = 0, 0
 					if erase {
 						erase = false
 						drawRegion(screen, startX, startY, x, y, defaultStyle, defaultStyle, ' ', false)
 					} else {
-						if selectedTool == "Square" {
+						if selectedTool == "Region" {
 							drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, false)
 						} else if selectedTool == "Border" {
 							drawRegion(screen, startX, startY, x, y, defaultStyle, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), ' ', true)
