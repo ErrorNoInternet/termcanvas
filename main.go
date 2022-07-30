@@ -225,10 +225,12 @@ func main() {
 					if x < colorsLength+colorsOffset && x-colorsOffset >= 0 {
 						selectedColor = colors[x-colorsOffset]
 					} else if x-toolsOffset < toolsLength-2 && x >= colorsLength+colorsOffset+2 {
-						selectedTool = ""
 						for tool, offset := range tools {
 							if x-toolsOffset >= offset && x-toolsOffset <= (offset+len(tool)+1) {
 								selectedTool = tool
+								if selectedTool == "Text" {
+									textX, textY = 0, 4
+								}
 							}
 						}
 					} else if x-actionsOffset < actionsLength-4 && x >= toolsLength {
