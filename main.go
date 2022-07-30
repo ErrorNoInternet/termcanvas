@@ -6,15 +6,15 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/encoding"
 )
 
 var (
-	block  rune     = '█'
-	colors []string = []string{
+	block   rune = '█'
+	resumed bool
+	colors  []string = []string{
 		"black",
 		"maroon",
 		"green",
@@ -117,8 +117,14 @@ func main() {
 
 	for {
 		screen.Show()
-		event := screen.PollEvent()
 		width, height := screen.Size()
+		var event tcell.Event
+		if !resumed {
+			event = screen.PollEvent()
+		} else {
+			event = tcell.NewEventResize(width, height)
+			resumed = false
+		}
 
 		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, true)
 		drawRegion(screen, colorsOffset-1, 0, colorsLength+colorsOffset, 3, defaultStyle, defaultStyle, ' ', true)
@@ -243,7 +249,6 @@ func main() {
 									screen.Clear()
 								} else if action == "Save" {
 									data, _ := dumpData(screen)
-									time.Sleep(100 * time.Millisecond)
 									screen.Suspend()
 									selectedTool = "Pencil"
 
@@ -253,6 +258,7 @@ func main() {
 									filePath := reader.Text()
 									if strings.TrimSpace(filePath) == "" {
 										screen.Resume()
+										resumed = true
 										break
 									}
 									err := ioutil.WriteFile(filePath, []byte(data), 0644)
@@ -265,8 +271,8 @@ func main() {
 									fmt.Print("Press Enter to continue...")
 									reader.Scan()
 									screen.Resume()
+									resumed = true
 								} else if action == "Load" {
-									time.Sleep(100 * time.Millisecond)
 									screen.Suspend()
 									selectedTool = "Pencil"
 
@@ -276,6 +282,7 @@ func main() {
 									filePath := reader.Text()
 									if strings.TrimSpace(filePath) == "" {
 										screen.Resume()
+										resumed = true
 										break
 									}
 									data, err := ioutil.ReadFile(filePath)
@@ -284,9 +291,11 @@ func main() {
 										fmt.Print("Press Enter to continue...")
 										reader.Scan()
 										screen.Resume()
+										resumed = true
 									} else {
 										screen.Resume()
 										readData(string(data), screen)
+										resumed = true
 									}
 								}
 							}
