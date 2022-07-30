@@ -227,7 +227,7 @@ func main() {
 									filePath := reader.Text()
 									data, err := ioutil.ReadFile(filePath)
 									if err != nil {
-										fmt.Printf("Unable to open %v: %v\n", filePath, err.Error())
+										fmt.Printf("Unable to load %v: %v\n", filePath, err.Error())
 										fmt.Print("Press Enter to continue...")
 										reader.Scan()
 										screen.Resume()
