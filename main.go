@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/encoding"
@@ -242,6 +243,7 @@ func main() {
 									screen.Clear()
 								} else if action == "Save" {
 									data, _ := dumpData(screen)
+									time.Sleep(100 * time.Millisecond)
 									screen.Suspend()
 									selectedTool = "Pencil"
 
@@ -264,7 +266,7 @@ func main() {
 									reader.Scan()
 									screen.Resume()
 								} else if action == "Load" {
-									dumpData(screen)
+									time.Sleep(100 * time.Millisecond)
 									screen.Suspend()
 									selectedTool = "Pencil"
 

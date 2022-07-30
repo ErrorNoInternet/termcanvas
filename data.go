@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func dumpData(screen tcell.Screen) (string, bool) {
-	data := ""
+	data := "x,y,foregroundColor,backgroundColor,character\n"
 	empty := true
 	width, height := screen.Size()
 	for x := 0; x <= width; x++ {
@@ -33,32 +34,39 @@ func dumpData(screen tcell.Screen) (string, bool) {
 			if foregroundColorName == "" && backgroundColorName == "" {
 				continue
 			}
-			data += fmt.Sprintf("%v,%v|%v|%v|%v\n", x, y, foregroundColorName, backgroundColorName, string(character))
+			if foregroundColorName == "" {
+				foregroundColorName = "reset"
+			}
+			if backgroundColorName == "" {
+				backgroundColorName = "reset"
+			}
+			data += fmt.Sprintf("%v,%v,%v,%v,%v\n", x, y, foregroundColorName, backgroundColorName, string(character))
 		}
 	}
 	return data, empty
 }
 
 func readData(data string, screen tcell.Screen) {
-	for _, line := range strings.Split(data, "\n") {
-		if strings.TrimSpace(line) == "" {
+	for index, line := range strings.Split(data, "\n") {
+		if index == 0 || strings.TrimSpace(line) == "" {
 			continue
 		}
-		segments := strings.Split(line, "|")
-		x, err := strconv.Atoi(strings.Split(segments[0], ",")[0])
+		segments := strings.Split(line, ",")
+		x, err := strconv.Atoi(segments[0])
 		if err != nil {
-			panic("invalid x coordinate")
+			screen.Fini()
+			fmt.Printf("Invalid X coordinate at line %v\n", index+1)
+			os.Exit(1)
 		}
-		y, err := strconv.Atoi(strings.Split(segments[0], ",")[1])
+		y, err := strconv.Atoi(segments[1])
 		if err != nil {
-			panic("invalid y coordinate")
+			screen.Fini()
+			fmt.Printf("Invalid Y coordinate at line %v\n", index+1)
+			os.Exit(1)
 		}
-		foregroundColorName := segments[1]
-		backgroundColorName := segments[2]
-		character := []rune(segments[3])[0]
 		textColor := tcell.StyleDefault.
-			Foreground(tcell.GetColor(foregroundColorName)).
-			Background(tcell.GetColor(backgroundColorName))
-		screen.SetContent(x, y, character, nil, textColor)
+			Foreground(tcell.GetColor(segments[2])).
+			Background(tcell.GetColor(segments[3]))
+		screen.SetContent(x, y, []rune(segments[4])[0], nil, textColor)
 	}
 }
