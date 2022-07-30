@@ -203,9 +203,13 @@ func main() {
 					screen.SetContent(textX, textY, ' ', nil, textColor)
 				} else {
 					_, _, style, _ := screen.GetContent(textX, textY)
-					backgroundColor, _, _ := style.Decompose()
+					originalForegroundColor, originalBackgroundColor, _ := style.Decompose()
+					foregroundColor, backgroundColor := tcell.GetColor(selectedColor), originalBackgroundColor
+					if backgroundColor == 0 {
+						backgroundColor = originalForegroundColor
+					}
 					textColor := tcell.StyleDefault.
-						Foreground(tcell.GetColor(selectedColor)).
+						Foreground(foregroundColor).
 						Background(backgroundColor)
 					screen.SetContent(textX, textY, event.Rune(), nil, textColor)
 					textX++
