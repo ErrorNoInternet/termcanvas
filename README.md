@@ -10,17 +10,17 @@ Draw stuff in your terminal!
  - Displaying custom text
  - Saving & loading (CSV)
 
+## Keybindings
+`esc`: exit termcanvas\
+`left click`: place a pixel (draggable)\
+`right click`: remove a pixel (draggable)
+
 ## Compiling
 ```
 git clone https://github.com/ErrorNoInternet/termcanvas
 cd termcanvas
 go build
 ```
-
-## Keybindings
-`esc`: exit termcanvas\
-`left click`: place a pixel\
-`right click`: remove a pixel
 
 <sub>If you would like to modify or use this repository (including its code) in your own project, please be sure to credit!</sub>
 
