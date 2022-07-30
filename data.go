@@ -30,11 +30,8 @@ func dumpData(screen tcell.Screen) (string, bool) {
 					backgroundColorName = existingColor
 				}
 			}
-			if foregroundColorName == "" {
-				foregroundColorName = "reset"
-			}
-			if backgroundColorName == "" {
-				backgroundColorName = "reset"
+			if foregroundColorName == "" && backgroundColorName == "" {
+				continue
 			}
 			data += fmt.Sprintf("%v,%v|%v|%v|%v\n", x, y, foregroundColorName, backgroundColorName, string(character))
 		}
