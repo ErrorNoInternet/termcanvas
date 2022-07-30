@@ -264,6 +264,7 @@ func main() {
 									reader.Scan()
 									screen.Resume()
 								} else if action == "Load" {
+									dumpData(screen)
 									screen.Suspend()
 									selectedTool = "Pencil"
 
