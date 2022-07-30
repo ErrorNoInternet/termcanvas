@@ -326,11 +326,6 @@ func main() {
 									screen.SetContent(col, row, ' ', nil, defaultStyle)
 								}
 							}
-							for row := y1; row <= y2; row++ {
-								for col := x1; col <= x2; col++ {
-									screen.SetContent(col, row, ' ', nil, defaultStyle)
-								}
-							}
 						}
 						lastX = x
 						lastY = y
