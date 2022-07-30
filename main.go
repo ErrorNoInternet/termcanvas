@@ -270,13 +270,13 @@ func main() {
 						if x2 < x1 {
 							x1, x2 = x2, x1
 						}
-						for row := y1 - 1; row <= y2+1; row++ {
-							for col := x1 - 1; col <= x2+1; col++ {
+						for row := y1; row <= y2; row++ {
+							for col := x1; col <= x2; col++ {
 								screen.SetContent(col, row, ' ', nil, defaultStyle)
 							}
 						}
-						for row := y1 + 1; row <= y2-1; row++ {
-							for col := x1 + 1; col <= x2-1; col++ {
+						for row := y1; row <= y2; row++ {
+							for col := x1; col <= x2; col++ {
 								screen.SetContent(col, row, ' ', nil, defaultStyle)
 							}
 						}
