@@ -64,9 +64,14 @@ func drawData(data string, screen tcell.Screen) {
 			fmt.Printf("Invalid Y coordinate at line %v\n", index+1)
 			os.Exit(1)
 		}
+		characters := []rune(segments[4])
+		character := ' '
+		if len(characters) > 0 {
+			character = characters[0]
+		}
 		textColor := tcell.StyleDefault.
 			Foreground(tcell.GetColor(segments[2])).
 			Background(tcell.GetColor(segments[3]))
-		screen.SetContent(x, y, []rune(segments[4])[0], nil, textColor)
+		screen.SetContent(x, y, character, nil, textColor)
 	}
 }
