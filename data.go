@@ -46,7 +46,7 @@ func dumpData(screen tcell.Screen) (string, bool) {
 	return data, empty
 }
 
-func readData(data string, screen tcell.Screen) {
+func drawData(data string, screen tcell.Screen) {
 	for index, line := range strings.Split(data, "\n") {
 		if index == 0 || strings.TrimSpace(line) == "" {
 			continue

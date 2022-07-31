@@ -287,7 +287,7 @@ func main() {
 										screen.PostEvent(tcell.NewEventResize(width, height))
 									} else {
 										screen.Resume()
-										readData(string(data), screen)
+										drawData(string(data), screen)
 										screen.PostEvent(tcell.NewEventResize(width, height))
 									}
 								}
