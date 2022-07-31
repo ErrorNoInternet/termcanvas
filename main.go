@@ -89,7 +89,6 @@ func main() {
 		fmt.Printf("Unable to create screen: %v\n", err.Error())
 		os.Exit(1)
 	}
-	background := tcell.StyleDefault.Background(tcell.ColorBlack)
 	defaultStyle := tcell.StyleDefault.
 		Background(tcell.ColorReset).
 		Foreground(tcell.ColorReset)
@@ -369,8 +368,6 @@ func main() {
 					}
 				}
 			}
-		default:
-			screen.SetContent(width-1, height-1, 'X', nil, background)
 		}
 	}
 }
