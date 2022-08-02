@@ -242,7 +242,6 @@ func main() {
 								} else if action == "Save" {
 									data, _ := dumpData(screen)
 									screen.Suspend()
-									selectedTool = "Pencil"
 
 									reader := bufio.NewScanner(os.Stdin)
 									fmt.Print("(Save) File Path: ")
@@ -266,7 +265,6 @@ func main() {
 									screen.PostEvent(tcell.NewEventResize(width, height))
 								} else if action == "Load" {
 									screen.Suspend()
-									selectedTool = "Pencil"
 
 									reader := bufio.NewScanner(os.Stdin)
 									fmt.Print("(Load) File Path: ")
