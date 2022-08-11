@@ -15,8 +15,8 @@ Draw stuff in your terminal!
 It's possible to use more than 16 colors, by modifying the color names saved in the CSV files to hex codes.
 
 #### Multiplayer support
-To host a server, run `termcanvas -host`, which hosts a termcanvas server on port 55055 (you can change this with `termcanvas -host -port XXXXX`).
-To connect to a termcanvas server, run `termcanvas -connect example.com` (or `termcanvas -connect example.com -port XXXXX` for a custom port).
+To host a server, run `termcanvas -host`, which hosts a termcanvas server on port 55055 (you can change this with `termcanvas -host -port XXXXX`).\
+To connect to a termcanvas server, run `termcanvas -connect example.com` (or `termcanvas -connect example.com -port XXXXX` for a custom port).\
 The server host knows the IP address of whoever connects (clients can only see the server IP), and multiple people can connect to the same server.
 
 ## Keybindings
