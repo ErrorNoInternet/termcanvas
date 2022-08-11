@@ -18,7 +18,7 @@ See [examples/hex-colors.csv](https://github.com/ErrorNoInternet/termcanvas/blob
 #### Multiplayer support
 To host a termcanvas server, run `termcanvas -host`, which starts a server on port 55055 (you can change this with `termcanvas -host -port XXXXX`).
 To connect to a termcanvas server, run `termcanvas -connect example.com` (or `termcanvas -connect example.com -port XXXXX` for a custom port).
-The server host knows the IP address of whoever connects (clients can only see the server IP), and multiple clients can connect to the same server.
+The server host knows the IP addresses of whoever connects (clients can only see the server IP), and multiple clients can connect to the same server.
 
 ## Keybindings
 `esc`: exit termcanvas\
