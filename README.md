@@ -11,10 +11,15 @@ Draw stuff in your terminal!
  - Saving & loading (CSV)
  - Multiplayer support
 
+### Multiplayer support
+To host a server, run `termcanvas -host`, which hosts a termcanvas server on port 55055 (you can change this with `termcanvas -host -port XXXXX`).
+To connect to a termcanvas server, run `termcanvas -connect example.com` (or `termcanvas -connect example.com -port XXXXX` for a custom port).
+The server host knows the IP address of whoever connects (clients can only see the server IP), and multiple people can connect to the same server.
+
 ## Keybindings
 `esc`: exit termcanvas\
-`left click`: place a pixel (draggable)\
-`right click`: remove a pixel (draggable)
+`left click`: place a pixel (works with the Region tool, which draws a region)\
+`right click`: remove a pixel (works with the Region tool, which removes a region)
 
 ## Compiling
 ```
