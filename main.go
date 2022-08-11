@@ -194,6 +194,17 @@ func main() {
 	var startX, startY, lastX, lastY int
 	var textX, textY int = 0, 4
 
+	if hostServer && connectAddress != "" {
+		screen.Fini()
+		fmt.Println("You cannot host a server and connect to a server at the same time!")
+		os.Exit(1)
+	}
+	if canvasFile != "" && connectAddress != "" {
+		screen.Fini()
+		fmt.Println("You cannot load a canvas and connect to a server at the same time!")
+		os.Exit(1)
+	}
+
 	if hostServer {
 		listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 		if err != nil {
@@ -202,7 +213,8 @@ func main() {
 			os.Exit(1)
 		}
 		go handleConnections(listener, screen)
-	} else if connectAddress != "" {
+	}
+	if connectAddress != "" {
 		connection, err := net.Dial("tcp", connectAddress+":"+strconv.Itoa(port))
 		if err != nil {
 			screen.Fini()
@@ -211,13 +223,7 @@ func main() {
 		}
 		go handleConnection(connection, screen)
 	}
-
 	if canvasFile != "" {
-		if connectAddress != "" {
-			screen.Fini()
-			fmt.Println("You cannot connect to a server and load a canvas at the same time!")
-			os.Exit(1)
-		}
 		fileData, err := ioutil.ReadFile(canvasFile)
 		if err != nil {
 			screen.Fini()
