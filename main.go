@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -50,6 +51,7 @@ var (
 
 	hostServer     bool
 	connectAddress string
+	port           int
 	connections    []net.Conn
 )
 
@@ -166,6 +168,7 @@ func clearRegion(screen tcell.Screen, x1, y1, x2, y2 int, send bool) {
 func main() {
 	flag.BoolVar(&hostServer, "host", false, "Host a termcanvas server")
 	flag.StringVar(&connectAddress, "connect", "", "Connect to a termcanvas server")
+	flag.IntVar(&port, "port", 55055, "The port to host on or connect to")
 	flag.Parse()
 
 	encoding.Register()
@@ -190,7 +193,7 @@ func main() {
 	var textX, textY int = 0, 4
 
 	if hostServer {
-		listener, err := net.Listen("tcp", ":55055")
+		listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 		if err != nil {
 			screen.Fini()
 			fmt.Printf("Unable to listen for connections: %v\n", err.Error())
@@ -198,7 +201,7 @@ func main() {
 		}
 		go handleConnections(listener, screen)
 	} else if connectAddress != "" {
-		connection, err := net.Dial("tcp", connectAddress+":55055")
+		connection, err := net.Dial("tcp", connectAddress+":"+strconv.Itoa(port))
 		if err != nil {
 			screen.Fini()
 			fmt.Printf("Unable to connect to server: %v\n", err.Error())
