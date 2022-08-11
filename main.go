@@ -52,6 +52,7 @@ var (
 	hostServer     bool
 	connectAddress string
 	port           int
+	canvasFile     string
 	connections    []net.Conn
 )
 
@@ -169,6 +170,7 @@ func main() {
 	flag.BoolVar(&hostServer, "host", false, "Host a termcanvas server")
 	flag.StringVar(&connectAddress, "connect", "", "Connect to a termcanvas server")
 	flag.IntVar(&port, "port", 55055, "The port to host on or connect to")
+	flag.StringVar(&canvasFile, "canvas", "", "The canvas file to load")
 	flag.Parse()
 
 	encoding.Register()
@@ -208,6 +210,17 @@ func main() {
 			os.Exit(1)
 		}
 		go handleConnection(connection, screen)
+	}
+
+	if canvasFile != "" {
+		fileData, err := ioutil.ReadFile(canvasFile)
+		if err != nil {
+			screen.Fini()
+			fmt.Printf("Unable to load %v: %v\n", canvasFile, err.Error())
+			os.Exit(1)
+		} else {
+			drawData(string(fileData), screen)
+		}
 	}
 
 	colorsLength := len(colors)
