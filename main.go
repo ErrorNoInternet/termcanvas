@@ -103,7 +103,7 @@ func drawRegion(
 			setContent(screen, col, row, letter, style, false)
 		}
 	}
-	if connection != nil && y1 >= 4 && send {
+	if connection != nil && y1 >= 3 && send {
 		foregroundColorName, backgroundColorName := getColor(style)
 		if foregroundColorName == "" && backgroundColorName == "" {
 			foregroundColorName = "reset"
@@ -146,7 +146,7 @@ func clearRegion(screen tcell.Screen, x1, y1, x2, y2 int, send bool) {
 			setContent(screen, col, row, ' ', defaultStyle, false)
 		}
 	}
-	if connection != nil && y1 >= 4 && send {
+	if connection != nil && y1 >= 3 && send {
 		go fmt.Fprintf(connection, fmt.Sprintf(
 			"clearRegion:%v,%v,%v,%v\n",
 			x1,
@@ -198,7 +198,7 @@ func main() {
 			screen.Fini()
 			os.Exit(1)
 		}
-		go handleConnection(connection, screen)
+		go handleConnection(screen)
 	}
 
 	colorsLength := len(colors)
@@ -220,6 +220,7 @@ func main() {
 		width, height := screen.Size()
 		event := screen.PollEvent()
 
+		drawRegion(screen, 0, 0, width, 3, defaultStyle, defaultStyle, ' ', false, false)
 		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, true, false)
 		drawRegion(screen, colorsOffset-1, 0, colorsLength+colorsOffset, 3, defaultStyle, defaultStyle, ' ', true, false)
 		for index, color := range colors {
@@ -260,49 +261,47 @@ func main() {
 			}
 		}
 		for i := 0; i < len(selectedTool); i++ {
-			drawRegion(
+			setContent(
 				screen,
-				(selectedToolOffset)+(toolsOffset-1)+i,
-				1,
-				(selectedToolOffset)+(toolsOffset+1)+i,
-				3,
-				tcell.StyleDefault.Foreground(tcell.ColorWhite),
-				defaultStyle,
+				selectedToolOffset+toolsOffset+i,
+				2,
 				'^',
-				false,
+				tcell.StyleDefault.Foreground(tcell.ColorWhite),
 				false,
 			)
 		}
 		drawRegion(screen, actionsOffset-3, 0, actionsLength+actionsOffset-4, 3, defaultStyle, defaultStyle, ' ', true, false)
 		for action, offset := range actions {
 			for letterOffset, letter := range action {
-				drawRegion(
+				setContent(
 					screen,
-					actionsOffset-2+letterOffset+offset-1,
-					0,
-					actionsOffset-2+letterOffset+offset+1,
-					2,
-					tcell.StyleDefault.Foreground(tcell.ColorWhite),
-					defaultStyle,
+					actionsOffset-2+letterOffset+offset,
+					1,
 					letter,
-					false,
+					tcell.StyleDefault.Foreground(tcell.ColorWhite),
 					false,
 				)
 			}
 		}
 		if connection != nil {
+			for letterOffset, letter := range "Connected to:" {
+				setContent(
+					screen,
+					remainingOffset-2+letterOffset-1,
+					1,
+					letter,
+					tcell.StyleDefault.Foreground(tcell.ColorWhite),
+					false,
+				)
+			}
 			address := connection.RemoteAddr().String()
 			for letterOffset, letter := range address {
-				drawRegion(
+				setContent(
 					screen,
-					remainingOffset-2+letterOffset,
-					0,
-					remainingOffset-2+letterOffset,
+					remainingOffset-2+letterOffset-1,
 					2,
-					tcell.StyleDefault.Foreground(tcell.ColorWhite),
-					defaultStyle,
 					letter,
-					false,
+					tcell.StyleDefault.Foreground(tcell.ColorWhite),
 					false,
 				)
 			}
@@ -387,6 +386,7 @@ func main() {
 									filePath := reader.Text()
 									if strings.TrimSpace(filePath) == "" {
 										screen.Resume()
+										drawData(string(data), screen)
 										screen.PostEvent(tcell.NewEventResize(width, height))
 										break
 									}
@@ -400,8 +400,10 @@ func main() {
 									fmt.Print("Press Enter to continue...")
 									reader.Scan()
 									screen.Resume()
+									drawData(string(data), screen)
 									screen.PostEvent(tcell.NewEventResize(width, height))
 								} else if action == "Load" {
+									data, _ := dumpData(screen)
 									screen.Suspend()
 
 									reader := bufio.NewScanner(os.Stdin)
@@ -410,19 +412,21 @@ func main() {
 									filePath := reader.Text()
 									if strings.TrimSpace(filePath) == "" {
 										screen.Resume()
+										drawData(string(data), screen)
 										screen.PostEvent(tcell.NewEventResize(width, height))
 										break
 									}
-									data, err := ioutil.ReadFile(filePath)
+									fileData, err := ioutil.ReadFile(filePath)
 									if err != nil {
 										fmt.Printf("Unable to load %v: %v\n", filePath, err.Error())
 										fmt.Print("Press Enter to continue...")
 										reader.Scan()
 										screen.Resume()
+										drawData(string(data), screen)
 										screen.PostEvent(tcell.NewEventResize(width, height))
 									} else {
 										screen.Resume()
-										drawData(string(data), screen)
+										drawData(string(fileData), screen)
 										screen.PostEvent(tcell.NewEventResize(width, height))
 									}
 								}
@@ -498,6 +502,12 @@ func main() {
 }
 
 func exit(screen tcell.Screen) {
+	if connection != nil {
+		fmt.Fprintf(connection, "exit\n")
+		connection.Close()
+		connection = nil
+	}
+
 	data, empty := dumpData(screen)
 	screen.Fini()
 	if empty {

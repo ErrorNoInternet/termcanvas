@@ -14,11 +14,23 @@ import (
 func handleConnections(listener net.Listener, screen tcell.Screen) {
 	for {
 		connection, _ = listener.Accept()
-		go handleConnection(connection, screen)
+		data, empty := dumpData(screen)
+		var newData string
+		if !empty {
+			lines := strings.Split(data, "\n")
+			for index, line := range lines {
+				if index == 0 || strings.TrimSpace(line) == "" {
+					continue
+				}
+				newData += "set:" + line + "\n"
+			}
+		}
+		fmt.Fprintf(connection, newData)
+		go handleConnection(screen)
 	}
 }
 
-func handleConnection(connection net.Conn, screen tcell.Screen) {
+func handleConnection(screen tcell.Screen) {
 	reader := bufio.NewReader(connection)
 	for {
 		rawMessage, err := reader.ReadString('\n')
@@ -27,6 +39,10 @@ func handleConnection(connection net.Conn, screen tcell.Screen) {
 			return
 		}
 		message := strings.TrimSpace(string(rawMessage))
+		if message == "exit" {
+			connection.Close()
+			connection = nil
+		}
 
 		if strings.HasPrefix(message, "set:") {
 			segments := strings.Split(strings.Split(message, "set:")[1], ",")
