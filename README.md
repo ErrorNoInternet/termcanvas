@@ -26,6 +26,8 @@ The server host knows the IP address of whoever connects (clients can only see t
 `right click`: remove a pixel (works with the Region tool, which removes a region)
 
 ## Compiling
+### Requirements
+ - Go 1.18 or higher recommended
 ```
 git clone https://github.com/ErrorNoInternet/termcanvas
 cd termcanvas
