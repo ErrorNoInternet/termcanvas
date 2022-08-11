@@ -50,19 +50,21 @@ var (
 
 	hostServer     bool
 	connectAddress string
-	connection     net.Conn
+	connections    []net.Conn
 )
 
 func setContent(screen tcell.Screen, x, y int, letter rune, style tcell.Style, send bool) {
 	screen.SetContent(x, y, letter, nil, style)
 
-	if connection != nil && y >= 4 && send {
-		foregroundColorName, backgroundColorName := getColor(style)
-		if foregroundColorName == "" && backgroundColorName == "" {
-			foregroundColorName = "reset"
-			backgroundColorName = "reset"
+	if len(connections) > 0 && y >= 4 && send {
+		for _, connection := range connections {
+			foregroundColorName, backgroundColorName := getColor(style)
+			if foregroundColorName == "" && backgroundColorName == "" {
+				foregroundColorName = "reset"
+				backgroundColorName = "reset"
+			}
+			go fmt.Fprintf(connection, fmt.Sprintf("set:%v,%v,%v,%v,%v\n", x, y, foregroundColorName, backgroundColorName, string(letter)))
 		}
-		go fmt.Fprintf(connection, fmt.Sprintf("set:%v,%v,%v,%v,%v\n", x, y, foregroundColorName, backgroundColorName, string(letter)))
 	}
 }
 
@@ -103,30 +105,32 @@ func drawRegion(
 			setContent(screen, col, row, letter, style, false)
 		}
 	}
-	if connection != nil && y1 >= 3 && send {
-		foregroundColorName, backgroundColorName := getColor(style)
-		if foregroundColorName == "" && backgroundColorName == "" {
-			foregroundColorName = "reset"
-			backgroundColorName = "reset"
+	if len(connections) > 0 && y1 >= 3 && send {
+		for _, connection := range connections {
+			foregroundColorName, backgroundColorName := getColor(style)
+			if foregroundColorName == "" && backgroundColorName == "" {
+				foregroundColorName = "reset"
+				backgroundColorName = "reset"
+			}
+			borderForegroundColorName, borderBackgroundColorName := getColor(borderStyle)
+			if borderForegroundColorName == "" && borderBackgroundColorName == "" {
+				borderForegroundColorName = "reset"
+				borderBackgroundColorName = "reset"
+			}
+			go fmt.Fprintf(connection, fmt.Sprintf(
+				"region:%v,%v,%v,%v,%v,%v,%v,%v,%v,%v\n",
+				x1,
+				y1,
+				x2,
+				y2,
+				foregroundColorName,
+				backgroundColorName,
+				borderForegroundColorName,
+				borderBackgroundColorName,
+				string(letter),
+				drawBorders,
+			))
 		}
-		borderForegroundColorName, borderBackgroundColorName := getColor(borderStyle)
-		if borderForegroundColorName == "" && borderBackgroundColorName == "" {
-			borderForegroundColorName = "reset"
-			borderBackgroundColorName = "reset"
-		}
-		go fmt.Fprintf(connection, fmt.Sprintf(
-			"region:%v,%v,%v,%v,%v,%v,%v,%v,%v,%v\n",
-			x1,
-			y1,
-			x2,
-			y2,
-			foregroundColorName,
-			backgroundColorName,
-			borderForegroundColorName,
-			borderBackgroundColorName,
-			string(letter),
-			drawBorders,
-		))
 	}
 }
 
@@ -146,14 +150,16 @@ func clearRegion(screen tcell.Screen, x1, y1, x2, y2 int, send bool) {
 			setContent(screen, col, row, ' ', defaultStyle, false)
 		}
 	}
-	if connection != nil && y1 >= 3 && send {
-		go fmt.Fprintf(connection, fmt.Sprintf(
-			"clearRegion:%v,%v,%v,%v\n",
-			x1,
-			y1,
-			x2,
-			y2,
-		))
+	if len(connections) > 0 && y1 >= 3 && send {
+		for _, connection := range connections {
+			go fmt.Fprintf(connection, fmt.Sprintf(
+				"clearRegion:%v,%v,%v,%v\n",
+				x1,
+				y1,
+				x2,
+				y2,
+			))
+		}
 	}
 }
 
@@ -192,13 +198,13 @@ func main() {
 		}
 		go handleConnections(listener, screen)
 	} else if connectAddress != "" {
-		connection, err = net.Dial("tcp", connectAddress+":55055")
+		connection, err := net.Dial("tcp", connectAddress+":55055")
 		if err != nil {
 			fmt.Printf("Unable to connect to server: %v\n", err.Error())
 			screen.Fini()
 			os.Exit(1)
 		}
-		go handleConnection(screen)
+		go handleConnection(connection, screen)
 	}
 
 	colorsLength := len(colors)
@@ -283,7 +289,7 @@ func main() {
 				)
 			}
 		}
-		if connection != nil {
+		if len(connections) > 0 {
 			for letterOffset, letter := range "Connected to:" {
 				setContent(
 					screen,
@@ -294,8 +300,11 @@ func main() {
 					false,
 				)
 			}
-			address := connection.RemoteAddr().String()
-			for letterOffset, letter := range address {
+			addresses := ""
+			for _, connection := range connections {
+				addresses += connection.RemoteAddr().String() + ", "
+			}
+			for letterOffset, letter := range strings.Trim(addresses, ", ") {
 				setContent(
 					screen,
 					remainingOffset-2+letterOffset-1,
@@ -351,7 +360,7 @@ func main() {
 			x, y := event.Position()
 			button := event.Buttons()
 			if button == 1 {
-				if y == 1 || y == 2 {
+				if y <= 3 {
 					if x < colorsLength+colorsOffset && x-colorsOffset >= 0 {
 						selectedColor = colors[x-colorsOffset]
 					} else if x-toolsOffset < toolsLength-2 && x >= colorsLength+colorsOffset+2 {
@@ -370,7 +379,7 @@ func main() {
 									exit(screen)
 								} else if action == "Clear" {
 									screen.Clear()
-									if connection != nil {
+									for _, connection := range connections {
 										_, err := fmt.Fprintf(connection, "clear\n")
 										if err != nil {
 											connection = nil
@@ -502,10 +511,9 @@ func main() {
 }
 
 func exit(screen tcell.Screen) {
-	if connection != nil {
+	for _, connection := range connections {
 		fmt.Fprintf(connection, "exit\n")
 		connection.Close()
-		connection = nil
 	}
 
 	data, empty := dumpData(screen)

@@ -11,9 +11,23 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+func removeConnection(array []net.Conn, connection net.Conn) []net.Conn {
+	targetIndex := -1
+	for index, arrayItem := range array {
+		if arrayItem == connection {
+			targetIndex = index
+		}
+	}
+	if targetIndex != -1 {
+		return append(array[:targetIndex], array[targetIndex+1:]...)
+	} else {
+		return array
+	}
+}
+
 func handleConnections(listener net.Listener, screen tcell.Screen) {
 	for {
-		connection, _ = listener.Accept()
+		connection, _ := listener.Accept()
 		data, empty := dumpData(screen)
 		var newData string
 		if !empty {
@@ -26,22 +40,31 @@ func handleConnections(listener net.Listener, screen tcell.Screen) {
 			}
 		}
 		fmt.Fprintf(connection, newData)
-		go handleConnection(screen)
+		go handleConnection(connection, screen)
 	}
 }
 
-func handleConnection(screen tcell.Screen) {
+func handleConnection(connection net.Conn, screen tcell.Screen) {
+	connections = append(connections, connection)
 	reader := bufio.NewReader(connection)
 	for {
 		rawMessage, err := reader.ReadString('\n')
 		if err != nil {
-			connection = nil
+			connection.Close()
+			connections = removeConnection(connections, connection)
 			return
 		}
 		message := strings.TrimSpace(string(rawMessage))
 		if message == "exit" {
 			connection.Close()
-			connection = nil
+			connections = removeConnection(connections, connection)
+			return
+		}
+
+		for _, existingConnection := range connections {
+			if existingConnection != connection {
+				go fmt.Fprintf(existingConnection, rawMessage)
+			}
 		}
 
 		if strings.HasPrefix(message, "set:") {
