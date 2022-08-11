@@ -213,9 +213,9 @@ func main() {
 	}
 
 	if canvasFile != "" {
-		if hostServer || connectAddress != "" {
+		if connectAddress != "" {
 			screen.Fini()
-			fmt.Println("You cannot host a server and load a canvas at the same time!")
+			fmt.Println("You cannot connect to a server and load a canvas at the same time!")
 			os.Exit(1)
 		}
 		fileData, err := ioutil.ReadFile(canvasFile)
