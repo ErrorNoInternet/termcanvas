@@ -12,8 +12,10 @@ import (
 )
 
 func handleConnections(listener net.Listener, screen tcell.Screen) {
-	connection, _ = listener.Accept()
-	go handleConnection(connection, screen)
+	for {
+		connection, _ = listener.Accept()
+		go handleConnection(connection, screen)
+	}
 }
 
 func handleConnection(connection net.Conn, screen tcell.Screen) {
@@ -24,20 +26,20 @@ func handleConnection(connection net.Conn, screen tcell.Screen) {
 			connection = nil
 			return
 		}
-		message := string(rawMessage)
+		message := strings.TrimSpace(string(rawMessage))
 
 		if strings.HasPrefix(message, "set:") {
 			segments := strings.Split(strings.Split(message, "set:")[1], ",")
 			x, err := strconv.Atoi(segments[0])
 			if err != nil {
 				screen.Fini()
-				fmt.Printf("Invalid X coordinate received")
+				fmt.Println("Invalid X coordinate received")
 				os.Exit(1)
 			}
 			y, err := strconv.Atoi(segments[1])
 			if err != nil {
 				screen.Fini()
-				fmt.Printf("Invalid Y coordinate received")
+				fmt.Println("Invalid Y coordinate received")
 				os.Exit(1)
 			}
 			character := ' '
@@ -59,25 +61,25 @@ func handleConnection(connection net.Conn, screen tcell.Screen) {
 			x1, err := strconv.Atoi(segments[0])
 			if err != nil {
 				screen.Fini()
-				fmt.Printf("Invalid X coordinate received")
+				fmt.Println("Invalid X1 coordinate received")
 				os.Exit(1)
 			}
 			y1, err := strconv.Atoi(segments[1])
 			if err != nil {
 				screen.Fini()
-				fmt.Printf("Invalid Y coordinate received")
+				fmt.Println("Invalid Y1 coordinate received")
 				os.Exit(1)
 			}
 			x2, err := strconv.Atoi(segments[2])
 			if err != nil {
 				screen.Fini()
-				fmt.Printf("Invalid X coordinate received")
+				fmt.Println("Invalid X2 coordinate received")
 				os.Exit(1)
 			}
 			y2, err := strconv.Atoi(segments[3])
 			if err != nil {
 				screen.Fini()
-				fmt.Printf("Invalid Y coordinate received")
+				fmt.Println("Invalid Y2 coordinate received")
 				os.Exit(1)
 			}
 			textColor := tcell.StyleDefault.
@@ -93,7 +95,34 @@ func handleConnection(connection net.Conn, screen tcell.Screen) {
 			drawRegion(screen, x1, y1, x2, y2, textColor, borderStyle, []rune(segments[8])[0], drawBorders, false)
 			width, height := screen.Size()
 			screen.PostEvent(tcell.NewEventResize(width, height))
-		} else if strings.HasPrefix(message, "clear") {
+		} else if strings.HasPrefix(message, "clearRegion:") {
+			segments := strings.Split(strings.Split(message, "clearRegion:")[1], ",")
+			x1, err := strconv.Atoi(segments[0])
+			if err != nil {
+				screen.Fini()
+				fmt.Println("Invalid X1 coordinate received")
+				os.Exit(1)
+			}
+			y1, err := strconv.Atoi(segments[1])
+			if err != nil {
+				screen.Fini()
+				fmt.Println("Invalid Y1 coordinate received")
+				os.Exit(1)
+			}
+			x2, err := strconv.Atoi(segments[2])
+			if err != nil {
+				screen.Fini()
+				fmt.Println("Invalid X2 coordinate received")
+				os.Exit(1)
+			}
+			y2, err := strconv.Atoi(segments[3])
+			if err != nil {
+				screen.Fini()
+				fmt.Println("Invalid Y2 coordinate received")
+				os.Exit(1)
+			}
+			clearRegion(screen, x1, y1, x2, y2, false)
+		} else if message == "clear" {
 			screen.Clear()
 			width, height := screen.Size()
 			screen.PostEvent(tcell.NewEventResize(width, height))

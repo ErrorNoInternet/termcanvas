@@ -130,6 +130,33 @@ func drawRegion(
 	}
 }
 
+func clearRegion(screen tcell.Screen, x1, y1, x2, y2 int, send bool) {
+	if y2 < y1 {
+		y1, y2 = y2, y1
+	}
+	if x2 < x1 {
+		x1, x2 = x2, x1
+	}
+
+	defaultStyle := tcell.StyleDefault.
+		Background(tcell.ColorReset).
+		Foreground(tcell.ColorReset)
+	for row := y1; row <= y2; row++ {
+		for col := x1; col <= x2; col++ {
+			setContent(screen, col, row, ' ', defaultStyle, false)
+		}
+	}
+	if connection != nil && y1 >= 4 && send {
+		go fmt.Fprintf(connection, fmt.Sprintf(
+			"clearRegion:%v,%v,%v,%v\n",
+			x1,
+			y1,
+			x2,
+			y2,
+		))
+	}
+}
+
 func main() {
 	flag.BoolVar(&hostServer, "host", false, "Host a termcanvas server")
 	flag.StringVar(&connectAddress, "connect", "", "Connect to a termcanvas server")
@@ -186,6 +213,7 @@ func main() {
 	colorsOffset := 7
 	toolsOffset := colorsOffset + colorsLength + 2
 	actionsOffset := toolsOffset + toolsLength + 2
+	remainingOffset := actionsOffset + actionsLength + 2
 
 	for {
 		screen.Show()
@@ -253,6 +281,23 @@ func main() {
 					actionsOffset-2+letterOffset+offset-1,
 					0,
 					actionsOffset-2+letterOffset+offset+1,
+					2,
+					tcell.StyleDefault.Foreground(tcell.ColorWhite),
+					defaultStyle,
+					letter,
+					false,
+					false,
+				)
+			}
+		}
+		if connection != nil {
+			address := connection.RemoteAddr().String()
+			for letterOffset, letter := range address {
+				drawRegion(
+					screen,
+					remainingOffset-2+letterOffset,
+					0,
+					remainingOffset-2+letterOffset,
 					2,
 					tcell.StyleDefault.Foreground(tcell.ColorWhite),
 					defaultStyle,
@@ -406,18 +451,7 @@ func main() {
 							startY = y
 						}
 						if lastX+lastY != 0 {
-							x1, y1, x2, y2 := startX, startY, lastX, lastY
-							if y2 < y1 {
-								y1, y2 = y2, y1
-							}
-							if x2 < x1 {
-								x1, x2 = x2, x1
-							}
-							for row := y1; row <= y2; row++ {
-								for col := x1; col <= x2; col++ {
-									setContent(screen, col, row, ' ', defaultStyle, true)
-								}
-							}
+							clearRegion(screen, startX, startY, lastX, lastY, true)
 						}
 						lastX = x
 						lastY = y
@@ -502,6 +536,5 @@ func exit(screen tcell.Screen) {
 			}
 		}
 	}
-
 	os.Exit(0)
 }
