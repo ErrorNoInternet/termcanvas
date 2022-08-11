@@ -407,12 +407,7 @@ func main() {
 									exit(screen)
 								} else if action == "Clear" {
 									screen.Clear()
-									for _, connection := range connections {
-										_, err := fmt.Fprintf(connection, "clear\n")
-										if err != nil {
-											connection = nil
-										}
-									}
+									go fmt.Fprintf(connection, "clear\n")
 								} else if action == "Save" {
 									data, _ := dumpData(screen)
 									screen.Suspend()
