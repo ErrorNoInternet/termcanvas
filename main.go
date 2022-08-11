@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"strings"
 
@@ -45,9 +47,34 @@ var (
 	}
 	selectedColor string = "white"
 	selectedTool  string = "Pencil"
+
+	hostServer     bool
+	connectAddress string
+	connection     net.Conn
 )
 
-func drawRegion(screen tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, borderStyle tcell.Style, letter rune, drawBorders bool) {
+func setContent(screen tcell.Screen, x, y int, letter rune, style tcell.Style, send bool) {
+	screen.SetContent(x, y, letter, nil, style)
+
+	if connection != nil && y >= 4 && send {
+		foregroundColorName, backgroundColorName := getColor(style)
+		if foregroundColorName == "" && backgroundColorName == "" {
+			foregroundColorName = "reset"
+			backgroundColorName = "reset"
+		}
+		go fmt.Fprintf(connection, fmt.Sprintf("set:%v,%v,%v,%v,%v\n", x, y, foregroundColorName, backgroundColorName, string(letter)))
+	}
+}
+
+func drawRegion(
+	screen tcell.Screen,
+	x1, y1, x2, y2 int,
+	style tcell.Style,
+	borderStyle tcell.Style,
+	letter rune,
+	drawBorders bool,
+	send bool,
+) {
 	if y2 < y1 {
 		y1, y2 = y2, y1
 	}
@@ -57,28 +84,57 @@ func drawRegion(screen tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, bord
 
 	if drawBorders {
 		for col := x1; col <= x2; col++ {
-			screen.SetContent(col, y1, tcell.RuneHLine, nil, borderStyle)
-			screen.SetContent(col, y2, tcell.RuneHLine, nil, borderStyle)
+			setContent(screen, col, y1, tcell.RuneHLine, borderStyle, false)
+			setContent(screen, col, y2, tcell.RuneHLine, borderStyle, false)
 		}
 		for row := y1 + 1; row < y2; row++ {
-			screen.SetContent(x1, row, tcell.RuneVLine, nil, borderStyle)
-			screen.SetContent(x2, row, tcell.RuneVLine, nil, borderStyle)
+			setContent(screen, x1, row, tcell.RuneVLine, borderStyle, false)
+			setContent(screen, x2, row, tcell.RuneVLine, borderStyle, false)
 		}
 		if y1 != y2 && x1 != x2 {
-			screen.SetContent(x1, y1, tcell.RuneULCorner, nil, borderStyle)
-			screen.SetContent(x2, y1, tcell.RuneURCorner, nil, borderStyle)
-			screen.SetContent(x1, y2, tcell.RuneLLCorner, nil, borderStyle)
-			screen.SetContent(x2, y2, tcell.RuneLRCorner, nil, borderStyle)
+			setContent(screen, x1, y1, tcell.RuneULCorner, borderStyle, false)
+			setContent(screen, x2, y1, tcell.RuneURCorner, borderStyle, false)
+			setContent(screen, x1, y2, tcell.RuneLLCorner, borderStyle, false)
+			setContent(screen, x2, y2, tcell.RuneLRCorner, borderStyle, false)
 		}
 	}
 	for row := y1 + 1; row < y2; row++ {
 		for col := x1 + 1; col < x2; col++ {
-			screen.SetContent(col, row, letter, nil, style)
+			setContent(screen, col, row, letter, style, false)
 		}
+	}
+	if connection != nil && y1 >= 4 && send {
+		foregroundColorName, backgroundColorName := getColor(style)
+		if foregroundColorName == "" && backgroundColorName == "" {
+			foregroundColorName = "reset"
+			backgroundColorName = "reset"
+		}
+		borderForegroundColorName, borderBackgroundColorName := getColor(borderStyle)
+		if borderForegroundColorName == "" && borderBackgroundColorName == "" {
+			borderForegroundColorName = "reset"
+			borderBackgroundColorName = "reset"
+		}
+		go fmt.Fprintf(connection, fmt.Sprintf(
+			"region:%v,%v,%v,%v,%v,%v,%v,%v,%v,%v\n",
+			x1,
+			y1,
+			x2,
+			y2,
+			foregroundColorName,
+			backgroundColorName,
+			borderForegroundColorName,
+			borderBackgroundColorName,
+			string(letter),
+			drawBorders,
+		))
 	}
 }
 
 func main() {
+	flag.BoolVar(&hostServer, "host", false, "Host a termcanvas server")
+	flag.StringVar(&connectAddress, "connect", "", "Connect to a termcanvas server")
+	flag.Parse()
+
 	encoding.Register()
 	screen, err := tcell.NewScreen()
 	if err != nil {
@@ -100,6 +156,24 @@ func main() {
 	var startX, startY, lastX, lastY int
 	var textX, textY int = 0, 4
 
+	if hostServer {
+		listener, err := net.Listen("tcp", ":55055")
+		if err != nil {
+			fmt.Printf("Unable to listen for connections: %v\n", err.Error())
+			screen.Fini()
+			os.Exit(1)
+		}
+		go handleConnections(listener, screen)
+	} else if connectAddress != "" {
+		connection, err = net.Dial("tcp", connectAddress+":55055")
+		if err != nil {
+			fmt.Printf("Unable to connect to server: %v\n", err.Error())
+			screen.Fini()
+			os.Exit(1)
+		}
+		go handleConnection(connection, screen)
+	}
+
 	colorsLength := len(colors)
 	toolsLength := 0
 	for tool := range tools {
@@ -118,12 +192,22 @@ func main() {
 		width, height := screen.Size()
 		event := screen.PollEvent()
 
-		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, true)
-		drawRegion(screen, colorsOffset-1, 0, colorsLength+colorsOffset, 3, defaultStyle, defaultStyle, ' ', true)
+		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, true, false)
+		drawRegion(screen, colorsOffset-1, 0, colorsLength+colorsOffset, 3, defaultStyle, defaultStyle, ' ', true, false)
 		for index, color := range colors {
-			drawRegion(screen, index+(colorsOffset-1), 0, index+(colorsOffset+1), 3, tcell.StyleDefault.Foreground(tcell.GetColor(color)), defaultStyle, block, false)
+			drawRegion(screen,
+				index+(colorsOffset-1),
+				0,
+				index+(colorsOffset+1),
+				3,
+				tcell.StyleDefault.Foreground(tcell.GetColor(color)),
+				defaultStyle,
+				block,
+				false,
+				false,
+			)
 		}
-		drawRegion(screen, toolsOffset-1, 0, toolsLength+toolsOffset-2, 3, defaultStyle, defaultStyle, ' ', true)
+		drawRegion(screen, toolsOffset-1, 0, toolsLength+toolsOffset-2, 3, defaultStyle, defaultStyle, ' ', true, false)
 		for tool, offset := range tools {
 			for letterOffset, letter := range tool {
 				drawRegion(
@@ -135,6 +219,7 @@ func main() {
 					tcell.StyleDefault.Foreground(tcell.ColorWhite),
 					defaultStyle,
 					letter,
+					false,
 					false,
 				)
 			}
@@ -157,9 +242,10 @@ func main() {
 				defaultStyle,
 				'^',
 				false,
+				false,
 			)
 		}
-		drawRegion(screen, actionsOffset-3, 0, actionsLength+actionsOffset-4, 3, defaultStyle, defaultStyle, ' ', true)
+		drawRegion(screen, actionsOffset-3, 0, actionsLength+actionsOffset-4, 3, defaultStyle, defaultStyle, ' ', true, false)
 		for action, offset := range actions {
 			for letterOffset, letter := range action {
 				drawRegion(
@@ -171,6 +257,7 @@ func main() {
 					tcell.StyleDefault.Foreground(tcell.ColorWhite),
 					defaultStyle,
 					letter,
+					false,
 					false,
 				)
 			}
@@ -199,7 +286,7 @@ func main() {
 					textColor := tcell.StyleDefault.
 						Foreground(backgroundColor).
 						Background(backgroundColor)
-					screen.SetContent(textX, textY, ' ', nil, textColor)
+					setContent(screen, textX, textY, ' ', textColor, true)
 				} else {
 					_, _, style, _ := screen.GetContent(textX, textY)
 					originalForegroundColor, originalBackgroundColor, _ := style.Decompose()
@@ -210,7 +297,7 @@ func main() {
 					textColor := tcell.StyleDefault.
 						Foreground(foregroundColor).
 						Background(backgroundColor)
-					screen.SetContent(textX, textY, event.Rune(), nil, textColor)
+					setContent(screen, textX, textY, event.Rune(), textColor, true)
 					textX++
 				}
 			}
@@ -239,6 +326,12 @@ func main() {
 									exit(screen)
 								} else if action == "Clear" {
 									screen.Clear()
+									if connection != nil {
+										_, err := fmt.Fprintf(connection, "clear\n")
+										if err != nil {
+											connection = nil
+										}
+									}
 								} else if action == "Save" {
 									data, _ := dumpData(screen)
 									screen.Suspend()
@@ -293,7 +386,7 @@ func main() {
 					}
 				} else {
 					if selectedTool == "Pencil" {
-						screen.SetContent(x, y, block, nil, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)))
+						setContent(screen, x, y, block, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), true)
 					} else if selectedTool == "Region" {
 						if !pressed {
 							pressed = true
@@ -301,11 +394,11 @@ func main() {
 							startY = y
 						}
 						if lastX+lastY != 0 {
-							drawRegion(screen, startX, startY, lastX, lastY, defaultStyle, defaultStyle, ' ', false)
+							drawRegion(screen, startX, startY, lastX, lastY, defaultStyle, defaultStyle, ' ', false, true)
 						}
 						lastX = x
 						lastY = y
-						drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, false)
+						drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, false, true)
 					} else if selectedTool == "Border" {
 						if !pressed {
 							pressed = true
@@ -322,20 +415,20 @@ func main() {
 							}
 							for row := y1; row <= y2; row++ {
 								for col := x1; col <= x2; col++ {
-									screen.SetContent(col, row, ' ', nil, defaultStyle)
+									setContent(screen, col, row, ' ', defaultStyle, true)
 								}
 							}
 						}
 						lastX = x
 						lastY = y
-						drawRegion(screen, startX, startY, x, y, defaultStyle, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), ' ', true)
+						drawRegion(screen, startX, startY, x, y, defaultStyle, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), ' ', true, true)
 					} else if selectedTool == "Text" {
 						textX, textY = x, y
 					}
 				}
 			} else if button == 2 {
 				if selectedTool == "Pencil" {
-					screen.SetContent(x, y, ' ', nil, defaultStyle)
+					setContent(screen, x, y, ' ', defaultStyle, true)
 				} else if selectedTool == "Region" {
 					if !pressed {
 						pressed = true
@@ -343,7 +436,7 @@ func main() {
 						startX = x
 						startY = y
 					}
-					drawRegion(screen, startX, startY, x, y, defaultStyle, defaultStyle, ' ', false)
+					drawRegion(screen, startX, startY, x, y, defaultStyle, defaultStyle, ' ', false, true)
 				} else if selectedTool == "Border" {
 					if !pressed {
 						pressed = true
@@ -351,7 +444,7 @@ func main() {
 						startX = x
 						startY = y
 					}
-					drawRegion(screen, startX, startY, x, y, defaultStyle, defaultStyle, ' ', false)
+					drawRegion(screen, startX, startY, x, y, defaultStyle, defaultStyle, ' ', false, true)
 				}
 			} else if button == 0 {
 				if pressed {
@@ -359,9 +452,9 @@ func main() {
 					lastX, lastY = 0, 0
 					if !erase {
 						if selectedTool == "Region" {
-							drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, false)
+							drawRegion(screen, startX, startY, x, y, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, false, true)
 						} else if selectedTool == "Border" {
-							drawRegion(screen, startX, startY, x, y, defaultStyle, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), ' ', true)
+							drawRegion(screen, startX, startY, x, y, defaultStyle, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), ' ', true, true)
 						}
 					}
 				}

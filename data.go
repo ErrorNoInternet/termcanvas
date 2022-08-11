@@ -9,6 +9,31 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+func getColor(style tcell.Style) (string, string) {
+	foregroundColor, backgroundColor, _ := style.Decompose()
+	var foregroundColorName, backgroundColorName string
+	for _, existingColor := range colors {
+		if tcell.GetColor(existingColor) == foregroundColor {
+			foregroundColorName = existingColor
+		}
+	}
+	for _, existingColor := range colors {
+		if tcell.GetColor(existingColor) == backgroundColor {
+			backgroundColorName = existingColor
+		}
+	}
+	if foregroundColorName == "" && backgroundColorName == "" {
+		return "", ""
+	}
+	if foregroundColorName == "" {
+		foregroundColorName = "reset"
+	}
+	if backgroundColorName == "" {
+		backgroundColorName = "reset"
+	}
+	return foregroundColorName, backgroundColorName
+}
+
 func dumpData(screen tcell.Screen) (string, bool) {
 	data := "x,y,foregroundColor,backgroundColor,character\n"
 	empty := true
@@ -19,26 +44,9 @@ func dumpData(screen tcell.Screen) (string, bool) {
 			if character != ' ' && character != 0 {
 				empty = false
 			}
-			foregroundColor, backgroundColor, _ := style.Decompose()
-			var foregroundColorName, backgroundColorName string
-			for _, existingColor := range colors {
-				if tcell.GetColor(existingColor) == foregroundColor {
-					foregroundColorName = existingColor
-				}
-			}
-			for _, existingColor := range colors {
-				if tcell.GetColor(existingColor) == backgroundColor {
-					backgroundColorName = existingColor
-				}
-			}
+			foregroundColorName, backgroundColorName := getColor(style)
 			if foregroundColorName == "" && backgroundColorName == "" {
 				continue
-			}
-			if foregroundColorName == "" {
-				foregroundColorName = "reset"
-			}
-			if backgroundColorName == "" {
-				backgroundColorName = "reset"
 			}
 			data += fmt.Sprintf("%v,%v,%v,%v,%v\n", x, y, foregroundColorName, backgroundColorName, string(character))
 		}
