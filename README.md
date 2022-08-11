@@ -13,6 +13,7 @@ Draw stuff in your terminal!
 
 #### Colors
 It's possible to use more than 16 colors, by modifying the color names saved in the CSV files to hex codes.
+See [examples/hex-colors.csv](https://github.com/ErrorNoInternet/termcanvas/blob/main/examples/hex-colors.csv) for an example.
 
 #### Multiplayer support
 To host a server, run `termcanvas -host`, which hosts a termcanvas server on port 55055 (you can change this with `termcanvas -host -port XXXXX`).\
