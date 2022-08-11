@@ -48,16 +48,21 @@ func handleConnection(connection net.Conn, screen tcell.Screen) {
 	connections = append(connections, connection)
 	reader := bufio.NewReader(connection)
 	for {
+		width, height := screen.Size()
+		screen.PostEvent(tcell.NewEventResize(width, height))
+
 		rawMessage, err := reader.ReadString('\n')
 		if err != nil {
 			connection.Close()
 			connections = removeConnection(connections, connection)
+			screen.PostEvent(tcell.NewEventResize(width, height))
 			return
 		}
 		message := strings.TrimSpace(string(rawMessage))
 		if message == "exit" {
 			connection.Close()
 			connections = removeConnection(connections, connection)
+			screen.PostEvent(tcell.NewEventResize(width, height))
 			return
 		}
 
@@ -94,7 +99,6 @@ func handleConnection(connection net.Conn, screen tcell.Screen) {
 				Foreground(tcell.GetColor(segments[2])).
 				Background(tcell.GetColor(segments[3]))
 			screen.SetContent(x, y, character, nil, textColor)
-			screen.Show()
 		} else if strings.HasPrefix(message, "region:") {
 			segments := strings.Split(strings.Split(message, "region:")[1], ",")
 			x1, err := strconv.Atoi(segments[0])
@@ -132,8 +136,6 @@ func handleConnection(connection net.Conn, screen tcell.Screen) {
 				drawBorders = true
 			}
 			drawRegion(screen, x1, y1, x2, y2, textColor, borderStyle, []rune(segments[8])[0], drawBorders, false)
-			width, height := screen.Size()
-			screen.PostEvent(tcell.NewEventResize(width, height))
 		} else if strings.HasPrefix(message, "clearRegion:") {
 			segments := strings.Split(strings.Split(message, "clearRegion:")[1], ",")
 			x1, err := strconv.Atoi(segments[0])
@@ -163,8 +165,6 @@ func handleConnection(connection net.Conn, screen tcell.Screen) {
 			clearRegion(screen, x1, y1, x2, y2, false)
 		} else if message == "clear" {
 			screen.Clear()
-			width, height := screen.Size()
-			screen.PostEvent(tcell.NewEventResize(width, height))
 		}
 	}
 }

@@ -105,7 +105,7 @@ func drawRegion(
 			setContent(screen, col, row, letter, style, false)
 		}
 	}
-	if len(connections) > 0 && y1 >= 3 && send {
+	if len(connections) > 0 && y1 >= 4 && send {
 		for _, connection := range connections {
 			foregroundColorName, backgroundColorName := getColor(style)
 			if foregroundColorName == "" && backgroundColorName == "" {
@@ -150,7 +150,7 @@ func clearRegion(screen tcell.Screen, x1, y1, x2, y2 int, send bool) {
 			setContent(screen, col, row, ' ', defaultStyle, false)
 		}
 	}
-	if len(connections) > 0 && y1 >= 3 && send {
+	if len(connections) > 0 && y1 >= 4 && send {
 		for _, connection := range connections {
 			go fmt.Fprintf(connection, fmt.Sprintf(
 				"clearRegion:%v,%v,%v,%v\n",
@@ -192,16 +192,16 @@ func main() {
 	if hostServer {
 		listener, err := net.Listen("tcp", ":55055")
 		if err != nil {
-			fmt.Printf("Unable to listen for connections: %v\n", err.Error())
 			screen.Fini()
+			fmt.Printf("Unable to listen for connections: %v\n", err.Error())
 			os.Exit(1)
 		}
 		go handleConnections(listener, screen)
 	} else if connectAddress != "" {
 		connection, err := net.Dial("tcp", connectAddress+":55055")
 		if err != nil {
-			fmt.Printf("Unable to connect to server: %v\n", err.Error())
 			screen.Fini()
+			fmt.Printf("Unable to connect to server: %v\n", err.Error())
 			os.Exit(1)
 		}
 		go handleConnection(connection, screen)
@@ -222,9 +222,7 @@ func main() {
 	remainingOffset := actionsOffset + actionsLength + 2
 
 	for {
-		screen.Show()
 		width, height := screen.Size()
-		event := screen.PollEvent()
 
 		drawRegion(screen, 0, 0, width, 3, defaultStyle, defaultStyle, ' ', false, false)
 		drawRegion(screen, 0, 0, 5, 3, tcell.StyleDefault.Foreground(tcell.GetColor(selectedColor)), defaultStyle, block, true, false)
@@ -315,6 +313,9 @@ func main() {
 				)
 			}
 		}
+
+		screen.Show()
+		event := screen.PollEvent()
 
 		switch event := event.(type) {
 		case *tcell.EventKey:
