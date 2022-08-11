@@ -9,6 +9,7 @@ Draw stuff in your terminal!
  - Drawing empty boxes
  - Displaying custom text
  - Saving & loading (CSV)
+ - Multiplayer support
 
 ## Keybindings
 `esc`: exit termcanvas\
