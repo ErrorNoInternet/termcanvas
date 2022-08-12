@@ -20,7 +20,7 @@ To host a termcanvas server, run `termcanvas -host`, which starts a server on po
 To connect to a termcanvas server, run `termcanvas -connect example.com` (or `termcanvas -connect example.com -port XXXXX` for a custom port).
 The server host knows the IP addresses of whoever connects (clients can only see the server IP), and multiple clients can connect to the same server.
 
-## Keybindings
+## Controls
 `esc`: exit termcanvas\
 `left click`: place a pixel (works with the Region tool, which draws a region)\
 `right click`: remove a pixel (works with the Region tool, which removes a region)
