@@ -1,6 +1,7 @@
 # termcanvas
 Draw stuff in your terminal!
-![Screenshot](https://raw.githubusercontent.com/ErrorNoInternet/termcanvas/main/screenshots/0.png)
+![Screenshot0](https://raw.githubusercontent.com/ErrorNoInternet/termcanvas/main/screenshots/0.png)
+![Screenshot1](https://raw.githubusercontent.com/ErrorNoInternet/termcanvas/main/screenshots/1.png)
 
 ## Features
  - Placing pixels
