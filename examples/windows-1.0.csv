@@ -1377,6 +1377,7 @@ x,y,foregroundColor,backgroundColor,character
 97,21,blue,reset,█
 97,22,blue,reset,█
 97,27,white,reset,d
+97,28,white,reset,D
 98,12,blue,reset,█
 98,13,blue,reset,█
 98,14,blue,reset,█
@@ -1388,6 +1389,7 @@ x,y,foregroundColor,backgroundColor,character
 98,21,blue,reset,█
 98,22,blue,reset,█
 98,27,white,reset,e
+98,28,white,reset,r
 99,12,blue,reset,█
 99,13,blue,reset,█
 99,14,blue,reset,█
@@ -1399,6 +1401,7 @@ x,y,foregroundColor,backgroundColor,character
 99,21,blue,reset,█
 99,22,blue,reset,█
 99,27,white,reset, 
+99,28,white,reset,a
 100,12,blue,reset,█
 100,13,blue,reset,█
 100,14,blue,reset,█
@@ -1410,6 +1413,7 @@ x,y,foregroundColor,backgroundColor,character
 100,21,blue,reset,█
 100,22,blue,reset,█
 100,27,white,reset,b
+100,28,white,reset,w
 101,12,blue,reset,█
 101,13,blue,reset,█
 101,14,blue,reset,█
@@ -1422,6 +1426,7 @@ x,y,foregroundColor,backgroundColor,character
 101,22,blue,reset,█
 101,26,white,reset,W
 101,27,white,reset,y
+101,28,white,reset,n
 102,12,blue,reset,█
 102,13,blue,reset,█
 102,14,blue,reset,█
@@ -1436,8 +1441,10 @@ x,y,foregroundColor,backgroundColor,character
 102,27,white,reset, 
 103,26,white,reset,n
 103,27,white,reset,E
+103,28,white,reset,i
 104,26,white,reset,d
 104,27,white,reset,r
+104,28,white,reset,n
 105,12,blue,reset,█
 105,13,blue,reset,█
 105,14,blue,reset,█
@@ -1462,6 +1469,7 @@ x,y,foregroundColor,backgroundColor,character
 106,22,blue,reset,█
 106,26,white,reset,w
 106,27,white,reset,o
+106,28,white,reset,t
 107,12,blue,reset,█
 107,13,blue,reset,█
 107,14,blue,reset,█
@@ -1474,6 +1482,7 @@ x,y,foregroundColor,backgroundColor,character
 107,22,blue,reset,█
 107,26,white,reset,s
 107,27,white,reset,r
+107,28,white,reset,e
 108,12,blue,reset,█
 108,13,blue,reset,█
 108,14,blue,reset,█
@@ -1486,6 +1495,7 @@ x,y,foregroundColor,backgroundColor,character
 108,22,blue,reset,█
 108,26,white,reset, 
 108,27,white,reset,N
+108,28,white,reset,r
 109,12,blue,reset,█
 109,13,blue,reset,█
 109,14,blue,reset,█
@@ -1498,6 +1508,7 @@ x,y,foregroundColor,backgroundColor,character
 109,22,blue,reset,█
 109,26,white,reset,1
 109,27,white,reset,o
+109,28,white,reset,m
 110,12,blue,reset,█
 110,13,blue,reset,█
 110,14,blue,reset,█
@@ -1510,6 +1521,7 @@ x,y,foregroundColor,backgroundColor,character
 110,22,blue,reset,█
 110,26,white,reset,.
 110,27,white,reset,I
+110,28,white,reset,c
 111,12,blue,reset,█
 111,13,blue,reset,█
 111,14,blue,reset,█
@@ -1522,6 +1534,7 @@ x,y,foregroundColor,backgroundColor,character
 111,22,blue,reset,█
 111,26,white,reset,0
 111,27,white,reset,n
+111,28,white,reset,a
 112,12,blue,reset,█
 112,13,blue,reset,█
 112,14,blue,reset,█
@@ -1533,6 +1546,7 @@ x,y,foregroundColor,backgroundColor,character
 112,21,blue,reset,█
 112,22,blue,reset,█
 112,27,white,reset,t
+112,28,white,reset,n
 113,12,blue,reset,█
 113,13,blue,reset,█
 113,14,blue,reset,█
@@ -1544,6 +1558,7 @@ x,y,foregroundColor,backgroundColor,character
 113,21,blue,reset,█
 113,22,blue,reset,█
 113,27,white,reset,e
+113,28,white,reset,v
 114,12,blue,reset,█
 114,13,blue,reset,█
 114,14,blue,reset,█
@@ -1555,6 +1570,7 @@ x,y,foregroundColor,backgroundColor,character
 114,21,blue,reset,█
 114,22,blue,reset,█
 114,27,white,reset,r
+114,28,white,reset,a
 115,12,blue,reset,█
 115,13,blue,reset,█
 115,14,blue,reset,█
@@ -1566,6 +1582,7 @@ x,y,foregroundColor,backgroundColor,character
 115,21,blue,reset,█
 115,22,blue,reset,█
 115,27,white,reset,n
+115,28,white,reset,s
 116,12,blue,reset,█
 116,13,blue,reset,█
 116,14,blue,reset,█
