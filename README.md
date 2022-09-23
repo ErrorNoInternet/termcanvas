@@ -29,7 +29,7 @@ The server host knows the IP addresses of whoever connects (clients can only see
 ## Compiling
 ### Requirements
  - Go 1.18 or higher recommended
-```
+```sh
 git clone https://github.com/ErrorNoInternet/termcanvas
 cd termcanvas
 go build
