@@ -4,14 +4,12 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/gdamore/tcell/v2/encoding"
 )
 
 var (
@@ -173,7 +171,6 @@ func main() {
 	flag.StringVar(&canvasFile, "canvas", "", "The canvas file to load")
 	flag.Parse()
 
-	encoding.Register()
 	screen, err := tcell.NewScreen()
 	if err != nil {
 		fmt.Printf("Unable to create screen: %v\n", err.Error())
@@ -224,7 +221,7 @@ func main() {
 		go handleConnection(connection, screen)
 	}
 	if canvasFile != "" {
-		fileData, err := ioutil.ReadFile(canvasFile)
+		fileData, err := os.ReadFile(canvasFile)
 		if err != nil {
 			screen.Fini()
 			fmt.Printf("Unable to load %v: %v\n", canvasFile, err.Error())
@@ -424,7 +421,7 @@ func main() {
 										screen.PostEvent(tcell.NewEventResize(width, height))
 										break
 									}
-									err := ioutil.WriteFile(filePath, []byte(data), 0644)
+									err := os.WriteFile(filePath, []byte(data), 0644)
 									if err != nil {
 										fmt.Printf("Unable to write to file: %v\n", err.Error())
 									} else {
@@ -450,7 +447,7 @@ func main() {
 										screen.PostEvent(tcell.NewEventResize(width, height))
 										break
 									}
-									fileData, err := ioutil.ReadFile(filePath)
+									fileData, err := os.ReadFile(filePath)
 									if err != nil {
 										fmt.Printf("Unable to load %v: %v\n", filePath, err.Error())
 										fmt.Print("Press Enter to continue...")
@@ -570,7 +567,7 @@ func exit(screen tcell.Screen) {
 			if strings.TrimSpace(filePath) == "" {
 				continue
 			}
-			err := ioutil.WriteFile(filePath, []byte(data), 0644)
+			err := os.WriteFile(filePath, []byte(data), 0644)
 			if err != nil {
 				fmt.Printf("Unable to write to file: %v\n", err.Error())
 			} else {
